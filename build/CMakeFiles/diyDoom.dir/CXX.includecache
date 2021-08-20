@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/c/Users/dan2k/chocoDoomDiy/main.cpp
+iostream
+-
+wad_loader/wad_loader.h
+/mnt/c/Users/dan2k/chocoDoomDiy/wad_loader/wad_loader.h
+
+/mnt/c/Users/dan2k/chocoDoomDiy/wad_loader/data_types.h
+cstdint
+-
+
+/mnt/c/Users/dan2k/chocoDoomDiy/wad_loader/wad_loader.h
+fstream
+-
+vector
+-
+string
+-
+data_types.h
+/mnt/c/Users/dan2k/chocoDoomDiy/wad_loader/data_types.h
+wad_reader/wad_reader.h
+/mnt/c/Users/dan2k/chocoDoomDiy/wad_loader/wad_reader/wad_reader.h
+
+/mnt/c/Users/dan2k/chocoDoomDiy/wad_loader/wad_reader/map.h
+../data_types.h
+/mnt/c/Users/dan2k/chocoDoomDiy/wad_loader/data_types.h
+string
+-
+vector
+-
+
+/mnt/c/Users/dan2k/chocoDoomDiy/wad_loader/wad_reader/wad_reader.h
+cstdint
+-
+../data_types.h
+/mnt/c/Users/dan2k/chocoDoomDiy/wad_loader/data_types.h
+map.h
+/mnt/c/Users/dan2k/chocoDoomDiy/wad_loader/wad_reader/map.h
+

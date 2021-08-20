@@ -1,0 +1,2 @@
+/usr/bin/ar qc libwad_loader.a  CMakeFiles/wad_loader.dir/wad_loader.cpp.o
+/usr/bin/ranlib libwad_loader.a

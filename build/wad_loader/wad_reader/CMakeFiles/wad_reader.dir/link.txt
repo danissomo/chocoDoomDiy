@@ -1,0 +1,2 @@
+/usr/bin/ar qc libwad_reader.a  CMakeFiles/wad_reader.dir/map.cpp.o CMakeFiles/wad_reader.dir/wad_reader.cpp.o
+/usr/bin/ranlib libwad_reader.a

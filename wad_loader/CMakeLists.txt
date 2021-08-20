@@ -1,0 +1,3 @@
+add_subdirectory(wad_reader)
+add_library(wad_loader STATIC wad_loader.cpp)
+target_link_libraries(wad_loader wad_reader)
