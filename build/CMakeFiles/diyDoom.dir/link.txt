@@ -1,1 +1,0 @@
-/usr/bin/c++  -g   CMakeFiles/diyDoom.dir/main.cpp.o  -o diyDoom wad_loader/libwad_loader.a wad_loader/wad_reader/libwad_reader.a 

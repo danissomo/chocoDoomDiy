@@ -3,8 +3,7 @@ project(diyDoom )
 if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
 	add_definitions(-DDEBUG_BUILD)
 endif()
-add_executable(diyDoom main.cpp)
-add_subdirectory(wad_loader)
-target_link_libraries(diyDoom wad_loader)
+include_directories("include/")
+add_subdirectory(src)
 
 

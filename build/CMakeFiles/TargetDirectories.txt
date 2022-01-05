@@ -1,9 +1,0 @@
-/mnt/c/Users/dan2k/chocoDoomDiy/build/CMakeFiles/rebuild_cache.dir
-/mnt/c/Users/dan2k/chocoDoomDiy/build/CMakeFiles/diyDoom.dir
-/mnt/c/Users/dan2k/chocoDoomDiy/build/CMakeFiles/edit_cache.dir
-/mnt/c/Users/dan2k/chocoDoomDiy/build/wad_loader/CMakeFiles/rebuild_cache.dir
-/mnt/c/Users/dan2k/chocoDoomDiy/build/wad_loader/CMakeFiles/wad_loader.dir
-/mnt/c/Users/dan2k/chocoDoomDiy/build/wad_loader/CMakeFiles/edit_cache.dir
-/mnt/c/Users/dan2k/chocoDoomDiy/build/wad_loader/wad_reader/CMakeFiles/rebuild_cache.dir
-/mnt/c/Users/dan2k/chocoDoomDiy/build/wad_loader/wad_reader/CMakeFiles/wad_reader.dir
-/mnt/c/Users/dan2k/chocoDoomDiy/build/wad_loader/wad_reader/CMakeFiles/edit_cache.dir
