@@ -9,7 +9,7 @@ DoomEngine::~DoomEngine() { delete m_pMap; }
 
 bool DoomEngine::Init() {
   m_pViewRenderer = new ViewRenderer(m_pRenderer);
-  m_pPlayer = new Player(m_pViewRenderer, THINGTYPE::ePLAYER);
+  m_pPlayer = new Player(THINGTYPE::ePLAYER);
   m_pMap = new Map(m_pViewRenderer, "E1M1", m_pPlayer);
 
   m_pViewRenderer->Init(m_pMap, m_pPlayer);

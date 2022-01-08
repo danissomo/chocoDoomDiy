@@ -2,8 +2,7 @@
 
 #include "Player.h"
 #include <cmath>
-Player::Player(ViewRenderer *pViewRendere, int ID){
-    m_pViewRenderer = pViewRendere;
+Player::Player( int ID){
     this->ID        = ID;
     pl_FOV           = 90;
     pl_mov_speed    = 2;
@@ -84,10 +83,4 @@ void Player::RotateLeft(){
 
 void Player::RotateRight(){
     plAngle -= (0.1875f * pl_rot_speed);
-}
-
-void Player::RenderAutoMap(){
-    m_pViewRenderer->SetDrawColor(255, 0, 0);
-
-    m_pViewRenderer->DrawLine(plX, plY, plX + 5, plY + 5);
 }

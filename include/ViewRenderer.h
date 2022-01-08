@@ -31,7 +31,6 @@ class ViewRenderer {
 
  protected:
   
-
   int AngleToScreen(Angle angle);
   int ScaleTranslate(int offset, int scale, int x_max, float param_cord);
   int RemapX(int x, int offset);

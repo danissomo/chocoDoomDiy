@@ -33,6 +33,7 @@ bool c_StateAutoMap::Set3DView(ViewRenderer *v){
     delete this;
     return true;
 }
+
 ViewRenderer::ViewRenderer(SDL_Renderer *pRenderer)
     : m_pRenderer(pRenderer), autoScaleFactor(1) {}
 
@@ -60,11 +61,11 @@ int ViewRenderer::AngleToScreen(Angle angle) {
   // Left side
   if (angle > 90) {
     angle -= 90;
-    iX = 160 - round(tanf(angle.GetValue() * 57.2957795) * 160);
+    iX = 160 - round(tanf(angle.GetValue() / 57.2957795) * 160);
   } else {
     // Right side
     angle = 90 - angle.GetValue();
-    iX = round(tanf(angle.GetValue() * 57.2957795) * 160);
+    iX = round(tanf(angle.GetValue() / 57.2957795) * 160);
     iX += 160;
   }
 
@@ -106,30 +107,38 @@ void ViewRenderer::InitFrame() {
   SetDrawColor(0, 0, 0);
   SDL_RenderClear(m_pRenderer);
 }
+
 void ViewRenderer::SetDrawColor(int R, int G, int B) {
   SDL_SetRenderDrawColor(m_pRenderer, R, G, B, SDL_ALPHA_OPAQUE);
 }
+
 void ViewRenderer::DrawRect(int X1, int Y1, int X2, int Y2) {
   SDL_Rect Rect = {RemapX(X1, 0), RemapY(Y1, 0),
                    RemapX(X2, 0) - RemapX(X1, 0) + 1,
                    RemapY(Y2, 0) - RemapY(Y1, 0) + 1};
   SDL_RenderDrawRect(m_pRenderer, &Rect);
 }
+
 void ViewRenderer::DrawLine(int X1, int Y1, int X2, int Y2) {
   SDL_RenderDrawLine(m_pRenderer, RemapX(X1, 0), RemapY(Y1, 0), RemapX(X2, 0),
                      RemapY(Y2, 0));
 }
 
 void ViewRenderer::Render() { viewState->Render(this); }
+
 void ViewRenderer::SetCurrentState(ViewState *s) { viewState = s; }
 
 bool ViewRenderer::Set3DView() { return viewState->Set3DView(this); }
+
 bool ViewRenderer::SetAutoMap() { return viewState->SetAutoMap(this); }
 
 void ViewRenderer::RenderAutoMap(){
   m_pMap->RenderAutoMap();
+  SetDrawColor(255, 0, 0);
+  DrawLine(m_pPlayer->GetX(), m_pPlayer->GetY(), m_pPlayer->GetX() + 5, m_pPlayer->GetY() + 5);
 }
 
 void ViewRenderer::Render3DView(){
   m_pMap->RenderBSPNodes();
 }
+
