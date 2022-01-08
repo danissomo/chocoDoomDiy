@@ -1,13 +1,15 @@
 #pragma once
 #include "data_types.h"
 #include "Player.h"
+#include "ViewRenderer.h"
+
 #include <string>
 #include <vector>
 #include <stdexcept>
 #include <SDL2/SDL.h>
 class Map{
 	public:
-		Map(SDL_Renderer* pRenderer, std::string s_name, Player *pPlayer);
+		Map(ViewRenderer *pViewRenderer, std::string s_name, Player *pPlayer);
 		~Map();
 
 		std::string get_name();
@@ -15,15 +17,20 @@ class Map{
 		void add_linedef(linedef &l);
 		void add_thing(Thing &t);
 		void add_node(Node &n);
-
+		void add_subsector(Subsector &s);
+		void add_seg(Seg &s);
 		vertex& get_vert(int i);
 
 		void RenderAutoMap();
-		void RenderAutoMapPlayer();
-		void RenderAutoMapWalls();
-		void RenderAutoMapNode();
+		void RenderBSPNodes();
+
 		int GetLumpIndex();
 		void SetLumpIndex(int);
+
+		int GetXmax(){return xMax;}
+		int GetXmin(){return xMin;}
+		int GetYmax(){return yMax;}
+		int GetYmin(){return yMin;}
 		//desmos visualisation
 		std::string to_desmos();
 	protected:
@@ -32,10 +39,20 @@ class Map{
 		std::vector<linedef> m_linedefs;
 		std::vector<Thing> m_things;
 		std::vector<Node> m_Nodes;
-		
-		int ScaleTranslate(int offset, int scale, int x_max, float param_cord);
-		int RemapX(int x, int offset);
-		int RemapY(int y, int offset);
+		std::vector<Subsector> m_Subsectors;
+		std::vector<Seg> m_Segs;
+
+		//void RenderAutoMapPlayer();
+		void RenderAutoMapWalls();
+		void RenderAutoMapNode(int NodeID);
+		void RenderBSPNodes(int NodeID);
+		void RenderSubsector(int subID);
+
+		//int ScaleTranslate(int offset, int scale, int x_max, float param_cord);
+		//int RemapX(int x, int offset);
+		//int RemapY(int y, int offset);
+
+		bool IsPointOnLeftNodeSide(int X, int Y, int NodeId);
 		int xMin;
 		int xMax;
 	
@@ -49,5 +66,5 @@ class Map{
 
 		void SetPlayer(Thing &);
 
-		SDL_Renderer *m_pRenderer;
+		ViewRenderer *m_pViewRenderer;
 };

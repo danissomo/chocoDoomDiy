@@ -3,7 +3,7 @@
 #include <string>
 #include "map.h"
 #include "wad_loader.h"
-
+#include "ViewRenderer.h"
 class DoomEngine {
  public:
   DoomEngine(SDL_Renderer *pRenderer);
@@ -34,6 +34,6 @@ class DoomEngine {
   wad_loader m_WADLoader;
   Map *m_pMap;
   Player *m_pPlayer;
-
+  ViewRenderer *m_pViewRenderer;
   SDL_Renderer *m_pRenderer;
 };

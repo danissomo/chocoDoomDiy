@@ -2,6 +2,12 @@
 
 #include <cstdint>
 
+// Subsector Identifier is the 16th bit which
+// indicate if the node ID is a subsector.
+// The node ID is stored as uint16
+// 0x8000 in binary 1000000000000000
+#define SUBSECTORIDENTIFIER 0x8000
+
 enum EMAPLUMPSINDEX
 {
     eTHINGS = 1,
@@ -86,4 +92,18 @@ struct Node{
 
     uint16_t RightChildID;
     uint16_t LeftChildID;
+};
+
+struct Subsector{
+    uint16_t SegCount;
+    uint16_t FirstSegID;
+};
+
+struct Seg{
+    uint16_t StartVertexID;
+    uint16_t EndVertexID;
+    uint16_t Angle;
+    uint16_t LinedefID;
+    uint16_t Direction; // 0 same as linedef, 1 opposite of linedef
+    uint16_t Offset; // distance along linedef to start of seg
 };

@@ -63,8 +63,7 @@ bool wad_loader::load_map_data(Map *map){
 	if(!read_map_vertex(map)){
 		std::cout << "Error: Failed to load vertex data MAP: " << map->get_name() <<std::endl;
 		return false;
-	}
-	
+	}	
 	if(!read_map_linedef(map)){
 		std::cout << "Error: Failed to load linedef data MAP: " << map->get_name()  << std::endl;
 		return false; 
@@ -76,6 +75,14 @@ bool wad_loader::load_map_data(Map *map){
 	if(!read_map_nodes(map)){
 		std::cout << "Error: Failed to load nodes data MAP: " << map->get_name()  << std::endl;
 		return false; 
+	}
+	if(!read_map_subsectors(map)){
+		std::cout << "Error: Failed to load subsectors data MAP: " << map->get_name()  << std::endl;
+		return false;
+	}
+	if(!read_map_segs(map)){
+		std::cout << "Error: Failed to load segs data MAP: " << map->get_name()  << std::endl;
+		return false;
 	}
 	return true;
 }
@@ -156,7 +163,7 @@ bool wad_loader::read_map_nodes(Map *map){
 	if(strcmp(WAD_dirs[node_index].lump_name, "NODES") != 0) return false;
 	int Node_size_b = sizeof(Node);
 	int nodes_count = WAD_dirs[node_index].lump_size/Node_size_b;
-
+	
 	Node node;
 	for(int  i=0; i < nodes_count; i++){
 		reader.read_node_data(WAD_data, WAD_dirs[node_index].lump_offset + i*Node_size_b, node);
@@ -164,3 +171,43 @@ bool wad_loader::read_map_nodes(Map *map){
 	}
 	return true;
 }
+
+bool wad_loader::read_map_subsectors(Map *map){
+	auto map_index = find_map_index(map);
+	if (map_index == -1) return false;
+
+	auto subsector_index = map_index + EMAPLUMPSINDEX::eSSECTORS;
+
+	if(strcmp(WAD_dirs[subsector_index].lump_name, "SSECTORS") != 0) return false;
+	int Subsector_size_b = sizeof(Subsector);
+	int subsectors_count = WAD_dirs[subsector_index].lump_size/Subsector_size_b;
+
+	Subsector subsector;
+	for(int  i=0; i < subsectors_count; i++){
+		reader.read_subsector_data(WAD_data, WAD_dirs[subsector_index].lump_offset + i*Subsector_size_b, subsector);
+		map->add_subsector(subsector);
+	}
+	return true;
+}
+
+bool wad_loader::read_map_segs(Map *map){
+	auto map_index = find_map_index(map);
+	if (map_index == -1) return false;
+
+	auto seg_index = map_index + EMAPLUMPSINDEX::eSEAGS;
+	if(strcmp(WAD_dirs[seg_index].lump_name, "SEGS")) return false;
+	int Seg_size_b = sizeof(Seg);
+	int segs_count = WAD_dirs[seg_index].lump_size/Seg_size_b;
+
+	Seg seg;
+	for(int i = 0; i < segs_count; i++){
+		reader.read_seg_data(WAD_data, WAD_dirs[seg_index].lump_offset + i*Seg_size_b, seg);
+		map->add_seg(seg);
+	}
+	return true;
+}
+// template <typename T>
+// bool wad_loader::read(Map*map,  void(*add)(T)){
+// 	auto map_index=1;
+// 	return true;
+//  }

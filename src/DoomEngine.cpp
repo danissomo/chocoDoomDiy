@@ -8,9 +8,11 @@ DoomEngine::DoomEngine(SDL_Renderer *pRenderer)
 DoomEngine::~DoomEngine() { delete m_pMap; }
 
 bool DoomEngine::Init() {
+  m_pViewRenderer = new ViewRenderer(m_pRenderer);
+  m_pPlayer = new Player(m_pViewRenderer, THINGTYPE::ePLAYER);
+  m_pMap = new Map(m_pViewRenderer, "E1M1", m_pPlayer);
 
-  m_pPlayer = new Player(THINGTYPE::ePLAYER);
-  m_pMap = new Map(m_pRenderer, "E1M1", m_pPlayer);
+  m_pViewRenderer->Init(m_pMap, m_pPlayer);
 
   m_WADLoader.set_wad_path(GetWADFileName());
 
@@ -36,7 +38,7 @@ std::string DoomEngine::GetWADFileName() { return "DOOM.WAD"; }
 void DoomEngine::Render(SDL_Renderer *pRenderer) {
   SDL_SetRenderDrawColor(pRenderer, 0x00, 0x00, 0x00, 0x00);
   SDL_RenderClear(pRenderer);
-  m_pMap->RenderAutoMap();
+  m_pViewRenderer->Render();
 }
 
 void DoomEngine::KeyPressed(SDL_Event &event) {
@@ -48,15 +50,21 @@ void DoomEngine::KeyPressed(SDL_Event &event) {
       break;
 
     case SDLK_LEFT:
+      m_pPlayer->RotateLeft();
       break;
 
     case SDLK_RIGHT:
+      m_pPlayer->RotateRight();
       break;
 
     case SDLK_ESCAPE:
       Quit();
       break;
-
+    case SDLK_TAB:
+      if( !m_pViewRenderer->Set3DView()){
+        m_pViewRenderer->SetAutoMap();
+      }
+      break;
     default:
       break;
   }

@@ -53,39 +53,53 @@ void wad_reader::read_vertex_data(const uint8_t* pWAD_data, int offset, vertex& 
 }
 
 void wad_reader::read_linedef_data(const uint8_t* pWAD_data, int offset, linedef& ldef) {
-	ldef.start_vertex = read_2_bytes(pWAD_data, offset);
-	ldef.end_vertex = read_2_bytes(pWAD_data, offset + 2);
-	ldef.flags = read_2_bytes(pWAD_data, offset + 4);
-	ldef.line_type = read_2_bytes(pWAD_data, offset + 6);
-	ldef.sector_tag = read_2_bytes(pWAD_data, offset + 8);
-	ldef.right_sidedef = read_2_bytes(pWAD_data, offset + 10);
-	ldef.left_sidedef = read_2_bytes(pWAD_data, offset + 12);
+	ldef.start_vertex 		= read_2_bytes(pWAD_data, offset);
+	ldef.end_vertex			= read_2_bytes(pWAD_data, offset + 2);
+	ldef.flags 				= read_2_bytes(pWAD_data, offset + 4);
+	ldef.line_type 			= read_2_bytes(pWAD_data, offset + 6);
+	ldef.sector_tag 		= read_2_bytes(pWAD_data, offset + 8);
+	ldef.right_sidedef 		= read_2_bytes(pWAD_data, offset + 10);
+	ldef.left_sidedef 		= read_2_bytes(pWAD_data, offset + 12);
 }
 
 void wad_reader::read_thing_data(const uint8_t *pWAD_data, int offset, Thing &thing){
-	thing.XPosition = read_2_bytes(pWAD_data, offset);
-    thing.YPosition = read_2_bytes(pWAD_data, offset + 2);
-    thing.Angle = read_2_bytes(pWAD_data, offset + 4);
-    thing.Type = read_2_bytes(pWAD_data, offset + 6);
-    thing.Flags = read_2_bytes(pWAD_data, offset + 8);
+	thing.XPosition 		= read_2_bytes(pWAD_data, offset);
+    thing.YPosition 		= read_2_bytes(pWAD_data, offset + 2);
+    thing.Angle 			= read_2_bytes(pWAD_data, offset + 4);
+    thing.Type 				= read_2_bytes(pWAD_data, offset + 6);
+    thing.Flags 			= read_2_bytes(pWAD_data, offset + 8);
 }
 
 void wad_reader::read_node_data(const uint8_t *pWAD_data, int offset, Node &node){
-	node.XPartition = read_2_bytes(pWAD_data, offset);
-    node.YPartition = read_2_bytes(pWAD_data, offset + 2);
-    node.ChangeXPartition = read_2_bytes(pWAD_data, offset + 4);
-    node.ChangeYPartition = read_2_bytes(pWAD_data, offset + 6);
+	node.XPartition 		= read_2_bytes(pWAD_data, offset);
+    node.YPartition 		= read_2_bytes(pWAD_data, offset + 2);
+    node.ChangeXPartition 	= read_2_bytes(pWAD_data, offset + 4);
+    node.ChangeYPartition 	= read_2_bytes(pWAD_data, offset + 6);
 
-    node.RightBoxTop = read_2_bytes(pWAD_data, offset + 8);
-    node.RightBoxBottom = read_2_bytes(pWAD_data, offset + 10);
-    node.RightBoxLeft = read_2_bytes(pWAD_data, offset + 12);
-    node.RightBoxRight = read_2_bytes(pWAD_data, offset + 14);
+    node.RightBoxTop 		= read_2_bytes(pWAD_data, offset + 8);
+    node.RightBoxBottom 	= read_2_bytes(pWAD_data, offset + 10);
+    node.RightBoxLeft 		= read_2_bytes(pWAD_data, offset + 12);
+    node.RightBoxRight 		= read_2_bytes(pWAD_data, offset + 14);
 
-    node.LeftBoxTop = read_2_bytes(pWAD_data, offset + 16);
-    node.LeftBoxBottom = read_2_bytes(pWAD_data, offset + 18);
-    node.LeftBoxLeft = read_2_bytes(pWAD_data, offset + 20);
-    node.LeftBoxRight = read_2_bytes(pWAD_data, offset + 22);
+    node.LeftBoxTop 		= read_2_bytes(pWAD_data, offset + 16);
+    node.LeftBoxBottom 		= read_2_bytes(pWAD_data, offset + 18);
+    node.LeftBoxLeft 		= read_2_bytes(pWAD_data, offset + 20);
+    node.LeftBoxRight 		= read_2_bytes(pWAD_data, offset + 22);
 
-    node.RightChildID = read_2_bytes(pWAD_data, offset + 24);
-    node.LeftChildID = read_2_bytes(pWAD_data, offset + 26);
+    node.RightChildID 		= read_2_bytes(pWAD_data, offset + 24);
+    node.LeftChildID 		= read_2_bytes(pWAD_data, offset + 26);
+}
+
+void wad_reader::read_subsector_data(const uint8_t *pWAD_data, int offset, Subsector &subsector){
+	subsector.SegCount 		= read_2_bytes(pWAD_data, offset);
+    subsector.FirstSegID 	= read_2_bytes(pWAD_data, offset + 2);
+}
+
+void wad_reader::read_seg_data(const uint8_t *pWAD_data, int offset, Seg &seg){
+	seg.StartVertexID 		= read_2_bytes(pWAD_data, offset);
+    seg.EndVertexID 		= read_2_bytes(pWAD_data, offset + 2);
+    seg.Angle 				= read_2_bytes(pWAD_data, offset + 4);
+    seg.LinedefID 			= read_2_bytes(pWAD_data, offset + 6);
+    seg.Direction 			= read_2_bytes(pWAD_data, offset + 8);
+    seg.Offset 				= read_2_bytes(pWAD_data, offset + 10);
 }
