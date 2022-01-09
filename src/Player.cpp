@@ -41,14 +41,14 @@ void Player::SetY(int Y){
     plY = Y;
 }
 
-Angle Player::AngleOfVertexInFOV(vertex &v){
+Angle Player::AngleOfVertexInFOV(Vertex &v){
     int vec_x = v.X_pos - plX;
     int vec_y = v.Y_pos - plY;
     //180/pi ~= 57.2957795
     return Angle(atan2f(vec_y, vec_x) * 57.2957795);
 }
 
-bool Player::IsLineInFOV(vertex &v1, vertex &v2, Angle &v1_angle, Angle &v2_angle){
+bool Player::IsLineInFOV(Vertex &v1, Vertex &v2, Angle &v1_angle, Angle &v2_angle){
     v1_angle = AngleOfVertexInFOV(v1);
     v2_angle = AngleOfVertexInFOV(v2);
     Angle v1_to_v2_span = v1_angle - v2_angle;

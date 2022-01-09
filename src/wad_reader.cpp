@@ -47,12 +47,12 @@ void wad_reader::read_dir_data(const uint8_t* pWAD_data, int offset, dir& d) {
 
 }
 
-void wad_reader::read_vertex_data(const uint8_t* pWAD_data, int offset, vertex& vert) {
+void wad_reader::read_vertex_data(const uint8_t* pWAD_data, int offset, Vertex& vert) {
 	vert.X_pos = read_2_bytes(pWAD_data, offset);
 	vert.Y_pos = read_2_bytes(pWAD_data, offset + 2);
 }
 
-void wad_reader::read_linedef_data(const uint8_t* pWAD_data, int offset, linedef& ldef) {
+void wad_reader::read_linedef_data(const uint8_t* pWAD_data, int offset, WADlinedef& ldef) {
 	ldef.start_vertex 		= read_2_bytes(pWAD_data, offset);
 	ldef.end_vertex			= read_2_bytes(pWAD_data, offset + 2);
 	ldef.flags 				= read_2_bytes(pWAD_data, offset + 4);
@@ -95,11 +95,71 @@ void wad_reader::read_subsector_data(const uint8_t *pWAD_data, int offset, Subse
     subsector.FirstSegID 	= read_2_bytes(pWAD_data, offset + 2);
 }
 
-void wad_reader::read_seg_data(const uint8_t *pWAD_data, int offset, Seg &seg){
+void wad_reader::read_seg_data(const uint8_t *pWAD_data, int offset, WADSeg &seg){
 	seg.StartVertexID 		= read_2_bytes(pWAD_data, offset);
     seg.EndVertexID 		= read_2_bytes(pWAD_data, offset + 2);
     seg.Angle 				= read_2_bytes(pWAD_data, offset + 4);
     seg.LinedefID 			= read_2_bytes(pWAD_data, offset + 6);
     seg.Direction 			= read_2_bytes(pWAD_data, offset + 8);
     seg.Offset 				= read_2_bytes(pWAD_data, offset + 10);
+}
+
+void wad_reader::read_sidedef_data(const uint8_t *pWAD_data, int offset, WADSidedef &side){
+	side.XOffset 			= read_2_bytes(pWAD_data, offset);
+    side.YOffset 			= read_2_bytes(pWAD_data, offset + 2);
+    side.UpperTexture[0] 	= pWAD_data[offset +  4];
+    side.UpperTexture[1] 	= pWAD_data[offset +  5];
+    side.UpperTexture[2] 	= pWAD_data[offset +  6];
+    side.UpperTexture[3] 	= pWAD_data[offset +  7];
+    side.UpperTexture[4] 	= pWAD_data[offset +  8];
+    side.UpperTexture[5] 	= pWAD_data[offset +  9];
+    side.UpperTexture[6] 	= pWAD_data[offset + 10];
+    side.UpperTexture[7] 	= pWAD_data[offset + 11];
+	
+    side.LowerTexture[0] 	= pWAD_data[offset + 12];
+    side.LowerTexture[1] 	= pWAD_data[offset + 13];
+    side.LowerTexture[2] 	= pWAD_data[offset + 14];
+    side.LowerTexture[3] 	= pWAD_data[offset + 15];
+    side.LowerTexture[4] 	= pWAD_data[offset + 16];
+    side.LowerTexture[5] 	= pWAD_data[offset + 17];
+    side.LowerTexture[6] 	= pWAD_data[offset + 18];
+    side.LowerTexture[7] 	= pWAD_data[offset + 19];
+
+    side.MiddleTexture[0] 	= pWAD_data[offset + 20];
+    side.MiddleTexture[1] 	= pWAD_data[offset + 21];
+    side.MiddleTexture[2] 	= pWAD_data[offset + 22];
+    side.MiddleTexture[3] 	= pWAD_data[offset + 23];
+    side.MiddleTexture[4] 	= pWAD_data[offset + 24];
+    side.MiddleTexture[5] 	= pWAD_data[offset + 25];
+    side.MiddleTexture[6] 	= pWAD_data[offset + 26];
+    side.MiddleTexture[7] 	= pWAD_data[offset + 27];
+
+    side.SectorID 			= read_2_bytes(pWAD_data, offset + 28);
+}
+
+void wad_reader::read_sector_data(const uint8_t *pWAD_data, int offset, WADSector &sector){
+	sector.FloorHeight 			= read_2_bytes(pWAD_data, offset);
+    sector.CeilingHeight 		= read_2_bytes(pWAD_data, offset + 2);
+
+    sector.FloorTexture[0] 		= pWAD_data[offset + 4];
+    sector.FloorTexture[1] 		= pWAD_data[offset + 5];
+    sector.FloorTexture[2] 		= pWAD_data[offset + 6];
+    sector.FloorTexture[3] 		= pWAD_data[offset + 7];
+    sector.FloorTexture[4] 		= pWAD_data[offset + 8];
+    sector.FloorTexture[5] 		= pWAD_data[offset + 9];
+    sector.FloorTexture[6] 		= pWAD_data[offset + 10];
+    sector.FloorTexture[7] 		= pWAD_data[offset + 11];
+
+    sector.CeilingTexture[0] 	= pWAD_data[offset + 12];
+    sector.CeilingTexture[1] 	= pWAD_data[offset + 13];
+    sector.CeilingTexture[2] 	= pWAD_data[offset + 14];
+    sector.CeilingTexture[3] 	= pWAD_data[offset + 15];
+    sector.CeilingTexture[4] 	= pWAD_data[offset + 16];
+    sector.CeilingTexture[5] 	= pWAD_data[offset + 17];
+    sector.CeilingTexture[6] 	= pWAD_data[offset + 18];
+    sector.CeilingTexture[7] 	= pWAD_data[offset + 19];
+
+    sector.Lightlevel 			= read_2_bytes(pWAD_data, offset + 20);
+    sector.Type 				= read_2_bytes(pWAD_data, offset + 22);
+    sector.Tag					= read_2_bytes(pWAD_data, offset + 24);
 }

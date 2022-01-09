@@ -11,15 +11,21 @@ class Map{
 	public:
 		Map(ViewRenderer *pViewRenderer, std::string s_name, Player *pPlayer);
 		~Map();
-
+		void Init();
 		std::string get_name();
-		void add_vertex(vertex &v);
-		void add_linedef(linedef &l);
-		void add_thing(Thing &t);
+
+	
+		void add_vertex(Vertex &v);
+		void add_linedef(WADlinedef &l);
 		void add_node(Node &n);
 		void add_subsector(Subsector &s);
-		void add_seg(Seg &s);
-		vertex& get_vert(int i);
+		void add_seg(WADSeg &s);
+		void add_sidedef(WADSidedef &s);
+		void add_sector(WADSector &s);
+		void add_thing(Thing &t);
+		
+		
+		Vertex& get_vert(int i);
 
 		void RenderAutoMap();
 		void RenderBSPNodes();
@@ -31,33 +37,38 @@ class Map{
 		int GetXmin(){return xMin;}
 		int GetYmax(){return yMax;}
 		int GetYmin(){return yMin;}
-		//desmos visualisation
-		std::string to_desmos();
+
+		
+		std::string to_desmos();//desmos visualisation https://www.desmos.com/calculator/nqyoe2gjgg
 	protected:
 		std::string map_name;
-		std::vector<vertex> m_verexes;
-		std::vector<linedef> m_linedefs;
+		std::vector<Vertex> m_verexes;
 		std::vector<Thing> m_things;
 		std::vector<Node> m_Nodes;
 		std::vector<Subsector> m_Subsectors;
+		std::vector<Sector> m_Sectors;
 		std::vector<Seg> m_Segs;
+		std::vector<Linedef> m_Linedefs;
+		std::vector<Sidedef> m_Sidedefs;
 
-		//void RenderAutoMapPlayer();
+		std::vector<WADSeg> m_wad_Segs;
+		std::vector<WADlinedef> m_wad_linedefs;
+		std::vector<WADSector> m_wad_Sectors;
+		std::vector<WADSidedef> m_wad_Sidedef;
+
 		void RenderAutoMapWalls();
 		void RenderAutoMapNode(int NodeID);
 		void RenderBSPNodes(int NodeID);
 		void RenderSubsector(int subID);
 
-		//int ScaleTranslate(int offset, int scale, int x_max, float param_cord);
-		//int RemapX(int x, int offset);
-		//int RemapY(int y, int offset);
 
 		bool IsPointOnLeftNodeSide(int X, int Y, int NodeId);
+
 		int xMin;
 		int xMax;
-	
 		int yMin;
 		int yMax;
+
 		int autoScaleFactor;  
 
 		int lumpIndex;
@@ -67,4 +78,10 @@ class Map{
 		void SetPlayer(Thing &);
 
 		ViewRenderer *m_pViewRenderer;
+
+		void BuildSectors();
+		void BuildSidedef();
+		void BuildLinedef();
+		void BuildSeg();
+	
 };

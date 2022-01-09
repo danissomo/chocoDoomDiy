@@ -29,7 +29,7 @@ bool DoomEngine::Init() {
     std::cout << "Error: failed to load map "<< std::endl;
     return false;
   }
-  
+  m_pMap->Init();
   return true;
 }
 

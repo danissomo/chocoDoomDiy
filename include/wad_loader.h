@@ -24,6 +24,8 @@ class wad_loader {
   bool read_map_nodes(Map *map);
   bool read_map_segs(Map *map);
   bool read_map_subsectors(Map *map);
+  bool read_map_sector(Map *map);
+  bool read_map_sidedef(Map *map);
 
   template <typename T, void(wad_reader::*read_)(const uint8_t*, int, T&), void (Map::*ptr)(T&), EMAPLUMPSINDEX eLUMP>
   	bool read(Map *map);

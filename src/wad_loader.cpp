@@ -1,248 +1,200 @@
 #include "wad_loader.h"
-#include <iostream>
+
 #include <string.h>
-const char* wad_loader::LUMPNAMES[] =  {
-      "THINGS",     // eTHINGS,
-      "LINEDEFS",   // eLINEDEFS,
-      "SIDEDDEFS",  // eSIDEDDEFS,
-      "VERTEXES",   // eVERTEXES,
-      "SEGS",      // eSEAGS,
-      "SSECTORS",   // eSSECTORS,
-      "NODES",      // eNODES,
-      "SECTORS",    // eSECTORS,
-      "REJECT",     // eREJECT,
-      "BLOCKMAP"    // eBLOCKMAP,
-  };
-wad_loader::wad_loader() :
-	WAD_data(NULL){
-}
 
-void wad_loader::set_wad_path(std::string file){
-	sWAD_file_path= file;
-	
-}
+#include <iostream>
+const char *wad_loader::LUMPNAMES[] = {
+    "THINGS",     // eTHINGS,
+    "LINEDEFS",   // eLINEDEFS,
+    "SIDEDEFS",  // eSIDEDDEFS,
+    "VERTEXES",   // eVERTEXES,
+    "SEGS",       // eSEAGS,
+    "SSECTORS",   // eSSECTORS,
+    "NODES",      // eNODES,
+    "SECTORS",    // eSECTORS,
+    "REJECT",     // eREJECT,
+    "BLOCKMAP"    // eBLOCKMAP,
+};
+wad_loader::wad_loader() : WAD_data(NULL) {}
+
+void wad_loader::set_wad_path(std::string file) { sWAD_file_path = file; }
 bool wad_loader::open_load() {
-	WAD_file.open(sWAD_file_path, std::ifstream::binary);
-	if (!WAD_file.is_open()) {
-		std::cout << "Error: Failed top open WAD file " << sWAD_file_path << std::endl;
-		return false;
-	}
+  WAD_file.open(sWAD_file_path, std::ifstream::binary);
+  if (!WAD_file.is_open()) {
+    std::cout << "Error: Failed top open WAD file " << sWAD_file_path
+              << std::endl;
+    return false;
+  }
 
-	WAD_file.seekg(0, WAD_file.end);
-	size_t length = WAD_file.tellg();
-	WAD_data = new uint8_t[length];
-	if (WAD_data == NULL) {
-		std::cout << "Error: Failed to allocate memory for WAD data of size " << length << std::endl;
-	}
+  WAD_file.seekg(0, WAD_file.end);
+  size_t length = WAD_file.tellg();
+  WAD_data = new uint8_t[length];
+  if (WAD_data == NULL) {
+    std::cout << "Error: Failed to allocate memory for WAD data of size "
+              << length << std::endl;
+  }
 
-	WAD_file.seekg(std::ifstream::beg);
-	WAD_file.read((char*)WAD_data, length);
+  WAD_file.seekg(std::ifstream::beg);
+  WAD_file.read((char *)WAD_data, length);
 
-	WAD_file.close();
+  WAD_file.close();
 
-	#ifdef DEBUG_BUILD
-	std::cout << "Info: Loading complete" << std::endl;
-	#endif 
+#ifdef DEBUG_BUILD
+  std::cout << "Info: Loading complete" << std::endl;
+#endif
 
-	return true;
+  return true;
 }
 
 bool wad_loader::load_wad() {
-	if (!open_load()) return false;
-	if (!read_dirs()) return false;
-	return true;
+  if (!open_load()) return false;
+  if (!read_dirs()) return false;
+  return true;
 }
 
-wad_loader::~wad_loader() {
-	delete[] WAD_data;
-}
+wad_loader::~wad_loader() { delete[] WAD_data; }
 
 bool wad_loader::read_dirs() {
-	wad_reader reader;
+  wad_reader reader;
 
-	header head;
-	reader.read_header_data(WAD_data, 0, head);
-	dir d;
+  header head;
+  reader.read_header_data(WAD_data, 0, head);
+  dir d;
 
-	for (uint i = 0; i < head.dir_count; i++) {
-		reader.read_dir_data(WAD_data, head.dir_offset + i * 16, d);
-		WAD_dirs.push_back(d);
-	}
-	return true;
+  for (uint i = 0; i < head.dir_count; i++) {
+    reader.read_dir_data(WAD_data, head.dir_offset + i * 16, d);
+    WAD_dirs.push_back(d);
+  }
+  return true;
 }
 
-int wad_loader::find_map_index(Map *map){
-	if (map->GetLumpIndex() != -1) return map->GetLumpIndex();
-	for(int i = 0; i < WAD_dirs.size(); i+=1){
-		if(WAD_dirs[i].lump_name == map->get_name()){
-			map->SetLumpIndex(i);
-			return i;
-		}
-	}
-	return -1;
+int wad_loader::find_map_index(Map *map) {
+  if (map->GetLumpIndex() != -1) return map->GetLumpIndex();
+  for (int i = 0; i < WAD_dirs.size(); i += 1) {
+    if (WAD_dirs[i].lump_name == map->get_name()) {
+      map->SetLumpIndex(i);
+      return i;
+    }
+  }
+  return -1;
 }
 
-bool wad_loader::load_map_data(Map *map){
-	if(!read_map_vertex(map)){
-		std::cout << "Error: Failed to load vertex data MAP: " << map->get_name() <<std::endl;
-		return false;
-	}	
-	if(!read_map_linedef(map)){
-		std::cout << "Error: Failed to load linedef data MAP: " << map->get_name()  << std::endl;
-		return false; 
-	}
-	if(!read_map_thing(map)){
-		std::cout << "Error: Failed to load things data MAP: " << map->get_name()  << std::endl;
-		return false; 
-	}
-	if(!read_map_nodes(map)){
-		std::cout << "Error: Failed to load nodes data MAP: " << map->get_name()  << std::endl;
-		return false; 
-	}
-	if(!read_map_subsectors(map)){
-		std::cout << "Error: Failed to load subsectors data MAP: " << map->get_name()  << std::endl;
-		return false;
-	}
-	if(!read_map_segs(map)){
-		std::cout << "Error: Failed to load segs data MAP: " << map->get_name()  << std::endl;
-		return false;
-	}
-	
-	return true;
+bool wad_loader::load_map_data(Map *map) {
+  if (!read_map_vertex(map)) {
+    std::cout << "Error: Failed to load vertex data MAP: " << map->get_name()
+              << std::endl;
+    return false;
+  }
+  if (!read_map_linedef(map)) {
+    std::cout << "Error: Failed to load linedef data MAP: " << map->get_name()
+              << std::endl;
+    return false;
+  }
+  if (!read_map_thing(map)) {
+    std::cout << "Error: Failed to load things data MAP: " << map->get_name()
+              << std::endl;
+    return false;
+  }
+  if (!read_map_nodes(map)) {
+    std::cout << "Error: Failed to load nodes data MAP: " << map->get_name()
+              << std::endl;
+    return false;
+  }
+  if (!read_map_subsectors(map)) {
+    std::cout << "Error: Failed to load subsectors data MAP: "
+              << map->get_name() << std::endl;
+    return false;
+  }
+  if (!read_map_segs(map)) {
+    std::cout << "Error: Failed to load segs data MAP: " << map->get_name()
+              << std::endl;
+    return false;
+  }
+  if (!read_map_sector(map)) {
+    std::cout << "Error: Failed to load sector data MAP: " << map->get_name()
+              << std::endl;
+    return false;
+  }
+  if (!read_map_sidedef(map)) {
+    std::cout << "Error: Failed to load sidef data MAP: " << map->get_name()
+              << std::endl;
+    return false;
+  }
+
+  return true;
 }
-template<typename T,void(wad_reader::*read_)(const uint8_t*, int, T&) , void(Map::*push)(T&), EMAPLUMPSINDEX eLUMP> bool wad_loader::read(Map *map){
-	auto map_index = find_map_index(map);
-	if(map_index == -1) return false;
-	
-	auto elem_index = map_index + eLUMP;
-	std::cout<< eLUMP << std::endl;
-	std::cout<< wad_loader::LUMPNAMES[eLUMP] << std::endl;
-	std::cout<< WAD_dirs[map_index].lump_name<< std::endl;
+template <typename T, void (wad_reader::*read_)(const uint8_t *, int, T &),
+          void (Map::*push)(T &), EMAPLUMPSINDEX eLUMP>
+bool wad_loader::read(Map *map) {
+  auto map_index = find_map_index(map);
+  if (map_index == -1) return false;
 
-	if(strcmp(WAD_dirs[elem_index].lump_name, wad_loader::LUMPNAMES[eLUMP-1])) return false;
-	int elem_size_b = sizeof(T);
-	int elem_count = WAD_dirs[elem_index].lump_size/elem_size_b;
-	T elem;
-	for(int i = 0; i< elem_count; i++){
-		(reader.*read_)(WAD_data, WAD_dirs[elem_index].lump_offset + i*elem_size_b, elem);
-		(map->*push)(elem);
-	}
-	return true;
-}
-bool wad_loader::read_map_vertex(Map *map){
-	// int iMap_index = find_map_index(map);
+  auto elem_index = map_index + eLUMP;
 
-	// if(iMap_index == -1)
-	// 	return false;
-
-	// iMap_index += EMAPLUMPSINDEX::eVERTEXES;
-	// if(strcmp(WAD_dirs[iMap_index].lump_name, "VERTEXES")!=0)
-	// 	return false;
-	// int iVertexSizeInBytes = sizeof(vertex);
-	// int iVertexesCount = WAD_dirs[iMap_index].lump_size/iVertexSizeInBytes;
-
-	// vertex vert;
-	// for(int i = 0; i < iVertexesCount; i++){
-	// 	reader.read_vertex_data(WAD_data, WAD_dirs[iMap_index].lump_offset+i*iVertexSizeInBytes, vert );
-	// 	map->add_vertex(vert);
-	// } 
-	
-	// return true;
-	return read<vertex, &wad_reader::read_vertex_data, &Map::add_vertex, EMAPLUMPSINDEX::eVERTEXES>(map);
+  if (strcmp(WAD_dirs[elem_index].lump_name, wad_loader::LUMPNAMES[eLUMP - 1]))
+    return false;
+  int elem_size_b = sizeof(T);
+  int elem_count = WAD_dirs[elem_index].lump_size / elem_size_b;
+  T elem;
+  for (int i = 0; i < elem_count; i++) {
+    (reader.*read_)(WAD_data, WAD_dirs[elem_index].lump_offset + i * elem_size_b, elem);
+    (map->*push)(elem);
+  }
+  return true;
 }
 
-bool wad_loader::read_map_linedef(Map *map){
-	// int map_index = find_map_index(map);
-	// if(map_index == -1) return false;
-
-	// map_index+=EMAPLUMPSINDEX::eLINEDEFS;
-	// if(strcmp(WAD_dirs[map_index].lump_name, "LINEDEFS")!=0) return false;
-
-	// int linedef_byte_size = sizeof(linedef);
-	// int linedef_count = WAD_dirs[map_index].lump_size/linedef_byte_size;
-
-	// linedef line;
-	// for(int i =0; i < linedef_count;i++){
-	// 	reader.read_linedef_data(WAD_data, WAD_dirs[map_index].lump_offset+i*linedef_byte_size, line);
-	// 	map->add_linedef(line);
-	// }
-	// return true;
-	return read<linedef, &wad_reader::read_linedef_data, &Map::add_linedef, EMAPLUMPSINDEX::eLINEDEFS>(map);
+bool wad_loader::read_map_vertex(Map *map) {
+  return read<	Vertex, 
+  				&wad_reader::read_vertex_data, 
+				&Map::add_vertex,
+             	EMAPLUMPSINDEX::eVERTEXES>(map);
 }
 
-bool wad_loader::read_map_thing(Map *map){
-	// int map_index = find_map_index(map);
-	// if (map_index == -1) return false;
-
-	// auto thing_index = map_index + EMAPLUMPSINDEX::eTHINGS;
-	// if(strcmp(WAD_dirs[thing_index].lump_name, "THINGS") != 0) return false;
-	 
-	// int Thing_size_b = sizeof(Thing);
-	// int things_count = WAD_dirs[thing_index].lump_size/Thing_size_b;
-
-	// Thing thing;
-	// for(int i = 0; i < things_count; i++){
-	// 	reader.read_thing_data(WAD_data, WAD_dirs[thing_index].lump_offset +  i*Thing_size_b,thing);
-	// 	map->add_thing(thing);
-	// }
-	// return true;
-	return read<Thing, &wad_reader::read_thing_data, &Map::add_thing, EMAPLUMPSINDEX::eTHINGS>(map);
+bool wad_loader::read_map_linedef(Map *map) {
+  return read<	WADlinedef, 
+  				&wad_reader::read_linedef_data, 
+				&Map::add_linedef,
+              	EMAPLUMPSINDEX::eLINEDEFS>(map);
 }
 
-bool wad_loader::read_map_nodes(Map *map){
-	// auto map_index = find_map_index(map);
-	// if (map_index == -1) return false;
-
-	// auto node_index = map_index + EMAPLUMPSINDEX::eNODES;
-
-	// if(strcmp(WAD_dirs[node_index].lump_name, "NODES") != 0) return false;
-	// int Node_size_b = sizeof(Node);
-	// int nodes_count = WAD_dirs[node_index].lump_size/Node_size_b;
-	
-	// Node node;
-	// for(int  i=0; i < nodes_count; i++){
-	// 	reader.read_node_data(WAD_data, WAD_dirs[node_index].lump_offset + i*Node_size_b, node);
-	// 	map->add_node(node);
-	// }
-	// return true;
-	return read<Node, &wad_reader::read_node_data, &Map::add_node, EMAPLUMPSINDEX::eNODES>(map);
+bool wad_loader::read_map_thing(Map *map) {
+  return read<	Thing, 
+  				&wad_reader::read_thing_data, 
+				&Map::add_thing,
+              	EMAPLUMPSINDEX::eTHINGS >(map);
 }
 
-bool wad_loader::read_map_subsectors(Map *map){
-	// auto map_index = find_map_index(map);
-	// if (map_index == -1) return false;
-
-	// auto subsector_index = map_index + EMAPLUMPSINDEX::eSSECTORS;
-
-	// if(strcmp(WAD_dirs[subsector_index].lump_name, "SSECTORS") != 0) return false;
-	// int Subsector_size_b = sizeof(Subsector);
-	// int subsectors_count = WAD_dirs[subsector_index].lump_size/Subsector_size_b;
-
-	// Subsector subsector;
-	// for(int  i=0; i < subsectors_count; i++){
-	// 	reader.read_subsector_data(WAD_data, WAD_dirs[subsector_index].lump_offset + i*Subsector_size_b, subsector);
-	// 	map->add_subsector(subsector);
-	// }
-	// return true;
-	return read<Subsector, &wad_reader::read_subsector_data, &Map::add_subsector, EMAPLUMPSINDEX::eSSECTORS>(map);
+bool wad_loader::read_map_nodes(Map *map) {
+  return read<	Node, 
+  				&wad_reader::read_node_data, 
+				&Map::add_node,
+              	EMAPLUMPSINDEX::eNODES >(map);
 }
 
-bool wad_loader::read_map_segs(Map *map){
-	// auto map_index = find_map_index(map);
-	// if (map_index == -1) return false;
-
-	// auto seg_index = map_index + EMAPLUMPSINDEX::eSEAGS;
-	// if(strcmp(WAD_dirs[seg_index].lump_name, "SEGS")) return false;
-	// int Seg_size_b = sizeof(Seg);
-	// int segs_count = WAD_dirs[seg_index].lump_size/Seg_size_b;
-
-	// Seg seg;
-	// for(int i = 0; i < segs_count; i++){
-	// 	reader.read_seg_data(WAD_data, WAD_dirs[seg_index].lump_offset + i*Seg_size_b, seg);
-	// 	map->add_seg(seg);
-	// }
-	// return true;
-	return read<Seg, &wad_reader::read_seg_data, &Map::add_seg, EMAPLUMPSINDEX::eSEAGS>(map);
+bool wad_loader::read_map_subsectors(Map *map) {
+  return read<	Subsector, 
+  				&wad_reader::read_subsector_data, 
+				&Map::add_subsector,
+              	EMAPLUMPSINDEX::eSSECTORS >(map);
 }
 
+bool wad_loader::read_map_segs(Map *map) {
+  return read<	WADSeg, 
+  				&wad_reader::read_seg_data, 
+				&Map::add_seg,
+              	EMAPLUMPSINDEX::eSEAGS >(map);
+}
 
+bool wad_loader::read_map_sector(Map *map){
+  return read<	WADSector, 
+  				&wad_reader::read_sector_data, 
+				&Map::add_sector,
+              	EMAPLUMPSINDEX::eSECTORS >(map);
+}
+
+bool wad_loader::read_map_sidedef(Map *map){
+  return read<	WADSidedef, 
+  				&wad_reader::read_sidedef_data, 
+				&Map::add_sidedef,
+              	EMAPLUMPSINDEX::eSIDEDDEFS >(map);
+}

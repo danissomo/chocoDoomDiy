@@ -45,7 +45,7 @@ void ViewRenderer::Init(Map *pMap, Player *pPlayer) {
   m_pMap = pMap;
 }
 
-void ViewRenderer::AddWallInFOV(Seg seg, Angle V1Angle, Angle V2Angle) {
+void ViewRenderer::AddWallInFOV(WADSeg seg, Angle V1Angle, Angle V2Angle) {
   int x_size, y_size;
   SDL_RenderGetLogicalSize(m_pRenderer, &x_size, &y_size);
   int v1xscreen = AngleToScreen(V1Angle);

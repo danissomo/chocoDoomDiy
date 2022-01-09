@@ -15,7 +15,7 @@ class ViewRenderer {
    
   void Init(Map *pMap, Player *pPlayer);
 
-  void AddWallInFOV(Seg seg, Angle V1Angle, Angle V2Angle);
+  void AddWallInFOV(WADSeg seg, Angle V1Angle, Angle V2Angle);
   void InitFrame();
   void SetDrawColor(int R, int G, int B);
   void DrawRect(int X1, int Y1, int X2, int Y2);
