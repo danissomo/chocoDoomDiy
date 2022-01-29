@@ -58,6 +58,7 @@ void Map::add_seg(WADSeg &s) { m_wad_Segs.push_back(s); }
 void Map::SetPlayer(Thing &t) {
   pPlayer->SetX(t.XPosition);
   pPlayer->SetY(t.YPosition);
+  pPlayer->SetZ(41);
   pPlayer->SetAngle(t.Angle);
 }
 
@@ -149,11 +150,10 @@ void Map::RenderSubsector(int subID) {
   Subsector subsector = m_Subsectors[subID];
   m_pViewRenderer->SetDrawColor(rand() % 255, rand() % 255, rand() % 255);
   for (int i = 0; i < subsector.SegCount; i++) {
-    WADSeg seg = m_wad_Segs[subsector.FirstSegID + i];
-    Angle a1, a2;
-    if (pPlayer->IsLineInFOV(m_verexes[seg.StartVertexID],
-                             m_verexes[seg.EndVertexID], a1, a2)) {
-      m_pViewRenderer->AddWallInFOV(seg, a1, a2);
+    Seg seg = m_Segs[subsector.FirstSegID + i];
+    Angle a1, a2, v1AngleFomPlayer, v2AngleFromPlayer;
+    if (pPlayer->IsLineInFOV(*(seg.pStartVertex), *(seg.pEndVertex), a1, a2, v1AngleFomPlayer, v2AngleFromPlayer)) {
+      m_pViewRenderer->AddWallInFOV(seg, a1, a2, v1AngleFomPlayer, v2AngleFromPlayer);
     }
   }
 }

@@ -1,7 +1,7 @@
 #include "Angle.h"
 
 #include <cmath>
-
+#include "data_types.h"
 Angle::Angle() : m_Angle(0) {}
 
 Angle::Angle(float angle) {
@@ -66,3 +66,21 @@ bool Angle::operator>(const float& rhs) { return (m_Angle > rhs); }
 bool Angle::operator>=(const Angle& rhs) { return (m_Angle >= rhs.m_Angle); }
 
 bool Angle::operator>=(const float& rhs) { return (m_Angle >= rhs); }
+
+float Angle::GetSinVal(){
+  return sinf(m_Angle  * PI/180.0);
+}
+
+
+float Angle::GetCosVal(){
+  return cosf(m_Angle * PI/180.0);
+}
+
+float Angle::GetTanVal(){
+  return tanf(m_Angle * PI/180.0);
+}
+
+float Angle::GetSingedVal(){
+  if (m_Angle > 180) return m_Angle -360;
+  return m_Angle;
+}

@@ -1,6 +1,6 @@
 add_executable(diyDoom main.cpp)
 
-add_library(Map_lib STATIC map.cpp ViewRenderer.cpp)
+add_library(Map_lib STATIC map.cpp ViewRenderer.cpp Angle.cpp)
 add_library(Wad_lib STATIC  wad_loader.cpp wad_reader.cpp )
 add_library(Game_lib STATIC Player.cpp DoomEngine.cpp Game.cpp Angle.cpp )
 

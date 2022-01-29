@@ -42,15 +42,16 @@ bool Game::Init() {
   SDL_SetRenderDrawColor(m_pRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
   
   m_pDoomEngine = new DoomEngine(m_pRenderer);
-  if (!m_pDoomEngine->Init()) {
-    std::cout << m_pDoomEngine->GetName() << " failed to initialize!"
-              << std::endl;
-    return false;
-  }
+  
 
   if (SDL_RenderSetLogicalSize(m_pRenderer, m_pDoomEngine->GetRenderWidth(),
                                m_pDoomEngine->GetRenderHeight()) != 0) {
     std::cout << "SDL failed to set logical size! SDL_Error: " << SDL_GetError()
+              << std::endl;
+    return false;
+  }
+  if (!m_pDoomEngine->Init()) {
+    std::cout << m_pDoomEngine->GetName() << " failed to initialize!"
               << std::endl;
     return false;
   }
@@ -61,7 +62,6 @@ bool Game::Init() {
 void Game::ProcessInput() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
-    {
       switch (event.type) {
         case SDL_KEYDOWN:
           m_pDoomEngine->KeyPressed(event);
@@ -75,8 +75,8 @@ void Game::ProcessInput() {
           m_pDoomEngine->Quit();
           break;
       }
-    }
   }
+  m_pDoomEngine->UpdateKeyStates(SDL_GetKeyboardState(NULL));
 }
 
 void Game::Render() {

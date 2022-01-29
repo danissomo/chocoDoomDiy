@@ -50,11 +50,11 @@ void DoomEngine::KeyPressed(SDL_Event &event) {
       break;
 
     case SDLK_LEFT:
-      m_pPlayer->RotateLeft();
+      //m_pPlayer->RotateLeft();
       break;
 
     case SDLK_RIGHT:
-      m_pPlayer->RotateRight();
+      //m_pPlayer->RotateRight();
       break;
 
     case SDLK_ESCAPE:
@@ -65,6 +65,11 @@ void DoomEngine::KeyPressed(SDL_Event &event) {
         m_pViewRenderer->SetAutoMap();
       }
       break;
+    case SDLK_w:
+      //m_pPlayer->MoveForward();
+      break;
+    case SDLK_s:
+      //m_pPlayer->MoveBackward();
     default:
       break;
   }
@@ -85,3 +90,24 @@ int DoomEngine::GetRenderHeight() { return m_iRenderHeight; }
 std::string DoomEngine::GetName() { return "DIYDoom"; }
 
 int DoomEngine::GetTimePerFrame() { return 1000 / 60; }
+
+void  DoomEngine::UpdateKeyStates(const Uint8 *keyStates){
+  if(keyStates[SDL_SCANCODE_LEFT]){
+      m_pPlayer->RotateLeft();
+  }
+  if(keyStates[SDL_SCANCODE_RIGHT]){
+      m_pPlayer->RotateRight();
+  }
+  if(keyStates[SDL_SCANCODE_W]){
+    m_pPlayer->MoveForward();
+  }
+  if(keyStates[SDL_SCANCODE_S]){
+    m_pPlayer->MoveBackward();
+  }
+  if(keyStates[SDL_SCANCODE_A]){
+    m_pPlayer->MoveLeft();
+  }
+  if(keyStates[SDL_SCANCODE_D]){
+    m_pPlayer->MoveRight();
+  }
+}

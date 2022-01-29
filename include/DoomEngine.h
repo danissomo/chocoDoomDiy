@@ -24,6 +24,7 @@ class DoomEngine {
 
   virtual std::string GetName();
   virtual std::string GetWADFileName();
+  void UpdateKeyStates(const Uint8 *keyStates);
 
  protected:
   int m_iRenderWidth;

@@ -1,5 +1,5 @@
 #pragma once
-//#include "data_types.h"
+
 class Angle{
 public:
     Angle();
@@ -23,7 +23,10 @@ public:
     bool operator>=(const float& rhs);
 
     float GetValue();
-
+    float GetSinVal();
+    float GetCosVal();
+    float GetTanVal();
+    float GetSingedVal();
 protected:
     float m_Angle;
 

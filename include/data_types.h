@@ -8,7 +8,7 @@
 // The node ID is stored as uint16
 // 0x8000 in binary 1000000000000000
 #define SUBSECTORIDENTIFIER 0x8000
-
+#define PI 3.14159265359
 enum EMAPLUMPSINDEX {
   eTHINGS = 1,
   eLINEDEFS,
@@ -164,3 +164,4 @@ struct Node {
   uint16_t RightChildID;
   uint16_t LeftChildID;
 };
+
