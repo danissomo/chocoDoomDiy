@@ -4,11 +4,10 @@
 #include <memory>
 std::string Map::get_name() { return map_name; }
 
-Map::Map(ViewRenderer *pViewRenderer, std::string s_name, Player *pPlayer)
+Map::Map(std::string s_name, Player *pPlayer)
     : map_name(s_name),
       autoScaleFactor(1),
-      pPlayer(pPlayer),
-      m_pViewRenderer(pViewRenderer) {
+      pPlayer(pPlayer){
   lumpIndex = -1;
 }
 
@@ -89,37 +88,22 @@ std::string Map::to_desmos() {
   return s;
 }
 
-void Map::RenderAutoMap() {
-  RenderAutoMapWalls();
-}
 
-void Map::RenderAutoMapWalls() {
-  m_pViewRenderer->SetDrawColor(255, 255, 255);
+
+std::vector<std::pair<Vertex, Vertex>> Map::GetLvlWalls() {
+  std::vector<std::pair<Vertex, Vertex>> ret;
+  //m_pViewRenderer->SetDrawColor(255, 255, 255);
   for (int i = 0; i < m_wad_linedefs.size(); i++) {
     auto p1 = m_verexes[m_wad_linedefs[i].start_vertex],
          p2 = m_verexes[m_wad_linedefs[i].end_vertex];
     Vertex p1_scaled, p2_scaled;
-
-    m_pViewRenderer->DrawLine(p1.X_pos, p1.Y_pos, p2.X_pos, p2.Y_pos);
+    
+    ret.push_back({p1, p2});
+    //m_pViewRenderer->DrawLine(p1.X_pos, p1.Y_pos, p2.X_pos, p2.Y_pos);
   }
+  return ret;
 }
 
-void Map::RenderAutoMapNode(int NodeID) {
-  // Get the last node
-  Node node = m_Nodes[NodeID];
-  m_pViewRenderer->SetDrawColor(0, 255, 0);
-  m_pViewRenderer->DrawRect(node.RightBoxLeft, node.RightBoxTop,
-                            node.RightBoxRight, node.RightBoxBottom);
-
-  m_pViewRenderer->SetDrawColor(255, 0, 0);
-  m_pViewRenderer->DrawRect(node.LeftBoxLeft, node.LeftBoxTop,
-                            node.LeftBoxRight, node.LeftBoxLeft);
-
-  m_pViewRenderer->SetDrawColor(0, 0, 255);
-  m_pViewRenderer->DrawLine(node.XPartition, node.YPartition,
-                            node.XPartition + node.ChangeXPartition,
-                            node.YPartition + node.ChangeYPartition);
-}
 
 bool Map::IsPointOnLeftNodeSide(int X, int Y, int NodeId) {
   int dx = X - m_Nodes[NodeId].XPartition;
@@ -129,31 +113,30 @@ bool Map::IsPointOnLeftNodeSide(int X, int Y, int NodeId) {
          0;
 }
 
-void Map::RenderBSPNodes() { RenderBSPNodes(m_Nodes.size() - 1); }
+void Map::RenderBSPNodes(std::vector<ViewRendererDataWall> &dataWallsInFOV) { RenderBSPNodes(m_Nodes.size() - 1, dataWallsInFOV); }
 
-void Map::RenderBSPNodes(int NodeID) {
+void Map::RenderBSPNodes(int NodeID, std::vector<ViewRendererDataWall> &dataWallsInFOV) {
   if (NodeID & SUBSECTORIDENTIFIER) {
-    RenderSubsector(NodeID & (~SUBSECTORIDENTIFIER));
+    RenderSubsector(NodeID & (~SUBSECTORIDENTIFIER), dataWallsInFOV);
     return;
   }
   bool onleft = IsPointOnLeftNodeSide(pPlayer->GetX(), pPlayer->GetY(), NodeID);
   if (onleft) {
-    RenderBSPNodes(m_Nodes[NodeID].LeftChildID);
-    RenderBSPNodes(m_Nodes[NodeID].RightChildID);
+    RenderBSPNodes(m_Nodes[NodeID].LeftChildID, dataWallsInFOV);
+    RenderBSPNodes(m_Nodes[NodeID].RightChildID, dataWallsInFOV);
   } else {
-    RenderBSPNodes(m_Nodes[NodeID].RightChildID);
-    RenderBSPNodes(m_Nodes[NodeID].LeftChildID);
+    RenderBSPNodes(m_Nodes[NodeID].RightChildID, dataWallsInFOV);
+    RenderBSPNodes(m_Nodes[NodeID].LeftChildID, dataWallsInFOV);
   }
 }
 
-void Map::RenderSubsector(int subID) {
+void Map::RenderSubsector(int subID, std::vector<ViewRendererDataWall> &dataWallsInFOV) {
   Subsector subsector = m_Subsectors[subID];
-  m_pViewRenderer->SetDrawColor(rand() % 255, rand() % 255, rand() % 255);
   for (int i = 0; i < subsector.SegCount; i++) {
     Seg seg = m_Segs[subsector.FirstSegID + i];
     Angle a1, a2, v1AngleFomPlayer, v2AngleFromPlayer;
     if (pPlayer->IsLineInFOV(*(seg.pStartVertex), *(seg.pEndVertex), a1, a2, v1AngleFomPlayer, v2AngleFromPlayer)) {
-      m_pViewRenderer->AddWallInFOV(seg, a1, a2, v1AngleFomPlayer, v2AngleFromPlayer);
+      dataWallsInFOV.push_back({seg, a1, a2, v1AngleFomPlayer, v2AngleFromPlayer});
     }
   }
 }
@@ -250,9 +233,13 @@ void Map::BuildSeg(){
 
         Sidedef *pRightSidedef;
         Sidedef *pLeftSidedef;
-
-        pRightSidedef = seg.pLinedef->pRightSidedef;
-        pLeftSidedef = seg.pLinedef->pLeftSidedef;
+        if (seg.Direction){
+          pRightSidedef = seg.pLinedef->pLeftSidedef;
+          pLeftSidedef = seg.pLinedef->pRightSidedef;
+        }else{
+          pRightSidedef = seg.pLinedef->pRightSidedef;
+          pLeftSidedef = seg.pLinedef->pLeftSidedef;
+        }
 
         if (pRightSidedef){
             seg.pRightSector = pRightSidedef->pSector;

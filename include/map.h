@@ -1,15 +1,24 @@
 #pragma once
 #include "data_types.h"
 #include "Player.h"
-#include "ViewRenderer.h"
+
 
 #include <string>
 #include <vector>
 #include <stdexcept>
 #include <SDL2/SDL.h>
+
+struct ViewRendererDataWall{
+	Seg seg;
+	Angle V1Angle;
+	Angle V2Angle;
+	Angle v1AngleFpl;
+	Angle V2AngleFpl;
+};
+
 class Map{
 	public:
-		Map(ViewRenderer *pViewRenderer, std::string s_name, Player *pPlayer);
+		Map(std::string s_name, Player *pPlayer);
 		~Map();
 		void Init();
 		std::string get_name();
@@ -26,9 +35,10 @@ class Map{
 		
 		
 		Vertex& get_vert(int i);
+		std::vector<std::pair<Vertex, Vertex>> GetLvlWalls();
 
-		void RenderAutoMap();
-		void RenderBSPNodes();
+	
+		void RenderBSPNodes(std::vector<ViewRendererDataWall> &dataWallsInFOV);
 
 		int GetLumpIndex();
 		void SetLumpIndex(int);
@@ -58,8 +68,8 @@ class Map{
 
 		void RenderAutoMapWalls();
 		void RenderAutoMapNode(int NodeID);
-		void RenderBSPNodes(int NodeID);
-		void RenderSubsector(int subID);
+		void RenderBSPNodes(int NodeID,  std::vector<ViewRendererDataWall> &dataWallsInFOV);
+		void RenderSubsector(int subID,  std::vector<ViewRendererDataWall> &dataWallsInFOV);
 
 
 		bool IsPointOnLeftNodeSide(int X, int Y, int NodeId);
@@ -77,7 +87,6 @@ class Map{
 
 		void SetPlayer(Thing &);
 
-		ViewRenderer *m_pViewRenderer;
 
 		void BuildSectors();
 		void BuildSidedef();

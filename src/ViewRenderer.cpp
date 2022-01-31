@@ -5,45 +5,36 @@
 //state segment
 
 
-class ViewState {
- public:
-  virtual void Render(ViewRenderer *v) = 0;
-  virtual bool SetAutoMap(ViewRenderer *v) { return false; }
-  virtual bool Set3DView(ViewRenderer *v) { return false; }
-};
 
-class c_StateAutoMap : public ViewState {
+class c_StateAutoMap : public ViewRenderer::ViewState{
  public:
  
   c_StateAutoMap() {}
   ~c_StateAutoMap() {}
   void Render(ViewRenderer *v) { v->RenderAutoMap(); }
-  bool Set3DView(ViewRenderer *v);
+  void Set3DView(ViewRenderer *v);
+  bool IsAutoMap() {return true;}
 };
 
-class c_State3DRender : public ViewState {
+class c_State3DRender : public  ViewRenderer::ViewState{
  public:
   c_State3DRender() {}
   ~c_State3DRender() {}
   void Render(ViewRenderer *v) { v->Render3DView(); }
-  bool SetAutoMap(ViewRenderer *v) {
+  void SetAutoMap(ViewRenderer *v) {
     v->SetCurrentState(new c_StateAutoMap());
     delete this;
-    return true;
   }
+  bool Is3DView() {return true;}
 };
 
-bool c_StateAutoMap::Set3DView(ViewRenderer *v){
+void c_StateAutoMap::Set3DView(ViewRenderer *v){
   v->SetCurrentState(new c_State3DRender());
     delete this;
-    return true;
 }
 
 void ViewRenderer::SetCurrentState(ViewState *s) { viewState = s; }
 
-bool ViewRenderer::Set3DView() { return viewState->Set3DView(this); }
-
-bool ViewRenderer::SetAutoMap() { return viewState->SetAutoMap(this); }
 
 
 
@@ -97,6 +88,22 @@ int ViewRenderer::RemapY(int y, int offset) {
 int ViewRenderer::ScaleTranslate(int offset, int scale, int x_max, float param_cord) {
   return offset + x_max / 2 + (-x_max / 2 + x_max * param_cord) / scale;
 }
+
+float ViewRenderer::GetScaleFactor(int vxScreen, Angle segToNormalAngle, float distToNormal){
+  const float MAX_SCALEFACTOR = 64.0f;
+  const float MIN_SCALEFACTOR = 0.00390625f;
+
+  Angle angle90(90);
+
+  Angle screenXAngle = m_ScreenXToAngle[vxScreen];
+  Angle seekwAngle = m_ScreenXToAngle[vxScreen] + m_pPlayer->GetAngle() - segToNormalAngle;
+  float scaleFactor = (m_DistPlayerToScreen * seekwAngle.GetCosVal()) / (distToNormal * screenXAngle.GetCosVal());
+
+  if (scaleFactor>MAX_SCALEFACTOR) return MAX_SCALEFACTOR;
+  if (scaleFactor < MIN_SCALEFACTOR) return MIN_SCALEFACTOR;
+  return scaleFactor;
+}
+
 
 SDL_Color ViewRenderer::GetWallColor(std::string textureName){
   if (m_WallColor.count(textureName))
@@ -176,14 +183,29 @@ void ViewRenderer::InitFrame() {
 void ViewRenderer::Render() { viewState->Render(this); }
 
 void ViewRenderer::RenderAutoMap(){
-  m_pMap->RenderAutoMap();
+  auto lvlWalls = m_pMap->GetLvlWalls();
+  SetDrawColor(255, 255, 255);
+  for (int i =0; i < lvlWalls.size(); i++)
+    DrawLine(
+      lvlWalls[i].first.X_pos,
+      lvlWalls[i].first.Y_pos,
+      lvlWalls[i].second.X_pos,
+      lvlWalls[i].second.Y_pos);
   SetDrawColor(255, 0, 0);
   DrawLine(m_pPlayer->GetX(), m_pPlayer->GetY(), m_pPlayer->GetX() + 5, m_pPlayer->GetY() + 5);
 }
 
 void ViewRenderer::Render3DView(){
   InitFrame();
-  m_pMap->RenderBSPNodes();
+  std::vector<ViewRendererDataWall> renderData;
+  renderData.clear();
+  m_pMap->RenderBSPNodes(renderData);
+  for(int i= 0; i< renderData.size(); i++)
+    AddWallInFOV(renderData[i].seg, 
+                 renderData[i].V1Angle, 
+                 renderData[i].V2Angle,
+                 renderData[i].v1AngleFpl,
+                 renderData[i].V2AngleFpl);
 }
 
 
@@ -202,6 +224,7 @@ void ViewRenderer::AddWallInFOV(Seg &seg, Angle V1Angle, Angle V2Angle, Angle v1
 
 void ViewRenderer::StoreWallRange(Seg &seg, int V1XScreen, int V2XScreen, Angle v1Angle, Angle v2Angle){
   SolidSegmentData Wall = { seg, V1XScreen, V2XScreen };
+  //CalculateWallHeightSimple(seg, V1XScreen, V2XScreen, v1Angle, v2Angle);
   CalculateWallHeight(seg, V1XScreen, V2XScreen, v1Angle, v2Angle);
   //DrawSolidWall(Wall);
 }
@@ -275,7 +298,7 @@ void ViewRenderer::ClipSolidWall(Seg &seg, int V1XScreen, int V2XScreen, Angle v
 
 }
 
-void ViewRenderer::CalculateWallHeight(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle ){
+void ViewRenderer::CalculateWallHeightSimple(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle ){
   float distToV1 = m_pPlayer->DistanceToPoint(*(seg.pStartVertex));
   float distToV2 = m_pPlayer->DistanceToPoint(*(seg.pEndVertex));
 
@@ -336,5 +359,36 @@ void ViewRenderer::CalculateCeilingFloorHeight(Seg &seg, int &VXScreen, float &D
     FloorVOnScreen = Y_half_screen_size - FloorVOnScreen;
   else
     FloorVOnScreen += Y_half_screen_size;
+}
+
+void ViewRenderer::CalculateWallHeight(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle ){
+  Angle angle90(90);
+  Angle segToNormalAngle = seg.SlopeAngle + angle90;
+  Angle normalToV1Angle = segToNormalAngle.GetValue() - v1Angle.GetValue();
+  Angle segToPlayerAngle = angle90 - normalToV1Angle;
+
+  float distToV1 = m_pPlayer->DistanceToPoint(*seg.pStartVertex);
+  float distToNormal = segToPlayerAngle.GetSinVal() * distToV1;
+
+  auto v1Scale = GetScaleFactor(v1X, segToNormalAngle, distToNormal);
+  auto v2Scale = GetScaleFactor(v2X, segToNormalAngle, distToNormal);
+
+  float steps = (v2Scale- v1Scale)/(v2X - v1X); 
+  float ceiling_ = seg.pRightSector->CeilingHeight - m_pPlayer->GetZ();
+  float floor_ = seg.pRightSector->FloorHeight - m_pPlayer->GetZ();
+  float ceilingStep =  -(ceiling_*steps);
+  float floorStep = -(floor_*steps);
+
+  float floorStart = Y_half_screen_size - (floor_*v1Scale);
+  float ceilingEnd = Y_half_screen_size - (ceiling_*v1Scale);
+  auto wallColor = GetWallColor(seg.pLinedef->pRightSidedef->MiddleTexture);
+  SetDrawColor(wallColor.r, wallColor.g, wallColor.b);
+
+  for (auto iXCur = v1X; iXCur<= v2X; iXCur++){
+    SDL_RenderDrawLine(m_pRenderer, iXCur, ceilingEnd, iXCur, floorStart);
+    floorStart+=floorStep;
+    ceilingEnd+=ceilingStep;
+  }
+
 }
 

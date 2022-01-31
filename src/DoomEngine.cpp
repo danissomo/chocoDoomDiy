@@ -10,7 +10,7 @@ DoomEngine::~DoomEngine() { delete m_pMap; }
 bool DoomEngine::Init() {
   m_pViewRenderer = new ViewRenderer(m_pRenderer);
   m_pPlayer = new Player(THINGTYPE::ePLAYER);
-  m_pMap = new Map(m_pViewRenderer, "E1M1", m_pPlayer);
+  m_pMap = new Map("E1M1", m_pPlayer);
 
   m_pViewRenderer->Init(m_pMap, m_pPlayer);
 
@@ -61,8 +61,10 @@ void DoomEngine::KeyPressed(SDL_Event &event) {
       Quit();
       break;
     case SDLK_TAB:
-      if( !m_pViewRenderer->Set3DView()){
-        m_pViewRenderer->SetAutoMap();
+      if( m_pViewRenderer->viewState->IsAutoMap()){
+          m_pViewRenderer->viewState->Set3DView(m_pViewRenderer);
+      }else{
+        m_pViewRenderer->viewState->SetAutoMap(m_pViewRenderer);
       }
       break;
     case SDLK_w:

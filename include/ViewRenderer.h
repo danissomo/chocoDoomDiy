@@ -9,10 +9,20 @@
 
 class ViewRenderer {
   protected:
-  class ViewState *viewState;
+  
   class Map *m_pMap;
   class Player *m_pPlayer;
  public:
+  class ViewState {
+    public:
+      virtual void Render(ViewRenderer *v) = 0;
+
+      virtual void SetAutoMap(ViewRenderer *v){};
+      virtual bool IsAutoMap() {return false;}
+
+      virtual void Set3DView(ViewRenderer *v){};
+      virtual bool Is3DView() {return false;}
+  }*viewState;
   ViewRenderer(SDL_Renderer *pRenderer);
   ~ViewRenderer();
    
@@ -29,8 +39,7 @@ class ViewRenderer {
   void Render();
   void SetCurrentState(ViewState *s);
 
-  bool Set3DView();
-  bool SetAutoMap();
+  
 
  protected:
   struct SolidSegmentRange{
@@ -43,10 +52,46 @@ class ViewRenderer {
         int XStart;
         int XEnd;
     };
+    struct SegmentRenderData{
+        int V1XScreen;
+        int V2XScreen;
+        Angle V1Angle;
+        Angle V2Angle;
+        float DistanceToV1;
+        float DistanceToNormal;
+        float V1ScaleFactor;
+        float V2ScaleFactor;
+        float Steps;
+
+        float RightSectorCeiling;
+        float RightSectorFloor;
+        float CeilingStep;
+        float CeilingEnd;
+        float FloorStep;
+        float FloorStart;
+
+        float LeftSectorCeiling;
+        float LeftSectorFloor;
+
+        bool bDrawUpperSection;
+        bool bDrawLowerSection;
+
+        float UpperHeightStep;
+        float iUpperHeight;
+        float LowerHeightStep;
+        float iLowerHeight;
+
+        bool UpdateFloor;
+        bool UpdateCeiling;
+
+		    Seg *pSeg;
+    };
+  
   int AngleToScreen(Angle angle);
   int ScaleTranslate(int offset, int scale, int x_max, float param_cord);
   int RemapX(int x, int offset);
   int RemapY(int y, int offset);
+  float GetScaleFactor(int vxScreen, Angle segToNormalAngle, float distToNormal);
 
   int autoScaleFactor;
   int X_screen_size;
@@ -68,6 +113,7 @@ class ViewRenderer {
   void StoreWallRange(Seg &seg, int V1XScreen, int V2XScreen, Angle v1Angle, Angle v2Angle);
   void ClipSolidWall(Seg &seg, int V1Xscreen, int V2Xscreen, Angle v1Angle, Angle v2Angle);
   void DrawSolidWall(SolidSegmentData &wall);
+  void CalculateWallHeightSimple(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle );
   void CalculateWallHeight(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle );
   void PartialSeg(Seg &seg, Angle& v1angle, Angle& v2angle, float &dist, bool isLeftSide);
   void CalculateCeilingFloorHeight(Seg &seg, int &VXScreen, float &DistanceToV, float &CeilingVOnScreen, float &FloorVOnScreen);
