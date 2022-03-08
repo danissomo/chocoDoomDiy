@@ -73,15 +73,8 @@ int ViewRenderer::RemapX(int x, int offset) {
 }
 
 int ViewRenderer::RemapY(int y, int offset) {
-  int iRenderXSize;
-  int iRenderYSize;
-
-  // Read what is the resolution we are using
-  SDL_RenderGetLogicalSize(m_pRenderer, &iRenderXSize, &iRenderYSize);
-  iRenderYSize--;
-  iRenderXSize--;
   return ScaleTranslate(
-      offset, autoScaleFactor, iRenderYSize,
+      offset, autoScaleFactor, Y_screen_size-1,
       float(-y + m_pMap->GetYmax()) / (m_pMap->GetYmax() - m_pMap->GetYmin()));
 }
 
@@ -134,6 +127,17 @@ int ViewRenderer::AngleToScreen(Angle angle) {
   return iX;
 }
 
+void ViewRenderer::SelectColor(Seg &seg, SDL_Color &color){
+  if(seg.pLeftSector){
+    color = GetWallColor(seg.pLinedef->pRightSidedef->UpperTexture);
+    SetDrawColor(color.r, color.g, color.b);
+  }else{
+    color = GetWallColor(seg.pLinedef->pRightSidedef->MiddleTexture);
+    SetDrawColor(color.r, color.g, color.b);
+  }
+}
+
+
 //render segment
 
 
@@ -150,6 +154,9 @@ void ViewRenderer::Init(Map *pMap, Player *pPlayer) {
 
   for (int i = 0; i <= X_screen_size; i++)
       m_ScreenXToAngle[i] = atan((X_half_screen_size-i) / float(m_DistPlayerToScreen))*180/PI;
+  
+  m_CeilingClipHeight.resize(X_screen_size);
+  m_FloorClipHeight.resize(X_screen_size);
 }
 
 //must be called before render every frame
@@ -178,6 +185,9 @@ void ViewRenderer::InitFrame() {
   wallRightSide.XStart = X_screen_size;
   wallRightSide.XEnd   = INT_MAX;
   m_SolidWallRanges.push_back(wallRightSide);
+
+  std::fill(m_FloorClipHeight.begin(), m_FloorClipHeight.end(), Y_screen_size);
+  std::fill(m_CeilingClipHeight.begin(), m_CeilingClipHeight.end(), -1);
 }
 
 void ViewRenderer::Render() { viewState->Render(this); }
@@ -208,6 +218,32 @@ void ViewRenderer::Render3DView(){
                  renderData[i].V2AngleFpl);
 }
 
+void ViewRenderer::RenderSegment(SegmentRenderData &renderData){
+  SDL_Color color;
+  int iXcur = renderData.V1XScreen;
+  SelectColor(*(renderData.pSeg), color);
+
+  while (iXcur <= renderData.V2XScreen){
+    int curCeilingEnd = renderData.CeilingEnd;
+    int curFloorStart = renderData.FloorStart;
+    if(!ValidateRange(renderData, iXcur, curCeilingEnd, curFloorStart)){
+      continue;
+    }
+    if(renderData.pSeg->pLeftSector){
+      DrawUpperSection(renderData, iXcur, curCeilingEnd);
+      DrawLowerSection(renderData, iXcur, curFloorStart);
+    }else{
+      DrawMiddleSection(renderData, iXcur, curCeilingEnd, curFloorStart);
+    }
+    renderData.CeilingEnd += renderData.CeilingStep;
+    renderData.FloorStart+=renderData.FloorStep;
+    iXcur++;
+    
+  }
+  
+  
+}
+
 
 //walls segment
 
@@ -216,9 +252,20 @@ void ViewRenderer::AddWallInFOV(Seg &seg, Angle V1Angle, Angle V2Angle, Angle v1
   int v1xscreen = AngleToScreen(v1AngleFpl);
   int v2xscreen = AngleToScreen(V2AngleFpl);
   if (v1xscreen == v2xscreen) return;
-  if (seg.pLeftSector == nullptr) 
-        ClipSolidWall(seg, v1xscreen, v2xscreen, V1Angle, V2Angle);
-   
+  if(seg.pLeftSector==nullptr){
+    ClipSolidWall(seg, v1xscreen, v2xscreen, V1Angle, V2Angle);
+    return;
+  }
+
+  if(seg.pLeftSector->CeilingHeight <= seg.pRightSector->FloorHeight ||
+     seg.pLeftSector->FloorHeight >= seg.pRightSector->CeilingHeight){
+       ClipSolidWall(seg, v1xscreen, v2xscreen, V1Angle, V2Angle);
+     }
+
+  if (seg.pLeftSector->CeilingHeight != seg.pRightSector->CeilingHeight ||
+      seg.pLeftSector->FloorHeight != seg.pRightSector->FloorHeight) 
+        ClipPassWall(seg, v1xscreen, v2xscreen, V1Angle, V2Angle);
+     //m_pMap->RenderAutoMap();
 }
 
 
@@ -228,6 +275,30 @@ void ViewRenderer::StoreWallRange(Seg &seg, int V1XScreen, int V2XScreen, Angle 
   CalculateWallHeight(seg, V1XScreen, V2XScreen, v1Angle, v2Angle);
   //DrawSolidWall(Wall);
 }
+
+void ViewRenderer::CeilingFloorUpdate(SegmentRenderData &renderData){
+  if(!renderData.pSeg->pLeftSector){
+    renderData.UpdateFloor = true;
+    renderData.UpdateCeiling = true;
+    return;
+  }
+
+  renderData.UpdateCeiling = renderData.LeftSectorCeiling != renderData.RightSectorCeiling;
+  renderData.UpdateFloor   = renderData.LeftSectorFloor != renderData.RightSectorFloor;
+  
+  
+  if (renderData.pSeg->pLeftSector->CeilingHeight <= renderData.pSeg->pRightSector->FloorHeight || 
+      renderData.pSeg->pLeftSector->FloorHeight >= renderData.pSeg->pRightSector->CeilingHeight)
+      renderData.UpdateCeiling = renderData.UpdateFloor = true;
+  
+  if(renderData.pSeg->pLeftSector->CeilingHeight <= m_pPlayer->GetZ())
+    renderData.UpdateCeiling = false;
+
+  if(renderData.pSeg->pRightSector->FloorHeight >= m_pPlayer->GetZ())
+    renderData.UpdateFloor = false;
+
+}
+
 
 void ViewRenderer::DrawSolidWall(SolidSegmentData &wall){
   SDL_Color color = GetWallColor(wall.seg.pLinedef->pRightSidedef->MiddleTexture);
@@ -298,6 +369,45 @@ void ViewRenderer::ClipSolidWall(Seg &seg, int V1XScreen, int V2XScreen, Angle v
 
 }
 
+void ViewRenderer::ClipPassWall(Seg &seg, int V1XScreen, int V2XScreen, Angle v1Angle, Angle v2Angle){
+  // Find clip window
+  if (m_SolidWallRanges.size() < 2) return;
+
+  SolidSegmentRange CurrentWall = {V1XScreen, V2XScreen};
+
+  auto FoundClipWall = m_SolidWallRanges.begin();
+  while (FoundClipWall != m_SolidWallRanges.end() && FoundClipWall->XEnd < CurrentWall.XStart - 1) {
+    ++FoundClipWall;
+  }
+
+  if (CurrentWall.XStart < FoundClipWall->XStart) {
+    // Are the edges touching?
+    if (CurrentWall.XEnd < FoundClipWall->XStart - 1) {
+      // All of the wall is visible, so insert it
+      StoreWallRange(seg, CurrentWall.XStart, CurrentWall.XEnd, v1Angle, v2Angle);
+      return;
+    }
+
+    // The end is already included, just update start
+    StoreWallRange(seg, CurrentWall.XStart, FoundClipWall->XStart - 1, v1Angle, v2Angle);
+  }
+
+  // This part is already occupied
+  if (CurrentWall.XEnd <= FoundClipWall->XEnd) return;
+
+  auto NextWall = FoundClipWall;
+
+  while (CurrentWall.XEnd >= next(NextWall, 1)->XStart - 1) {
+    // partially clipped by other walls, store each fragment
+    StoreWallRange(seg, NextWall->XEnd + 1, next(NextWall, 1)->XStart - 1, v1Angle, v2Angle);
+    ++NextWall;
+
+    if (CurrentWall.XEnd <= NextWall->XEnd) return;
+  }
+
+  StoreWallRange(seg, NextWall->XEnd + 1, CurrentWall.XEnd, v1Angle, v2Angle);
+}
+
 void ViewRenderer::CalculateWallHeightSimple(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle ){
   float distToV1 = m_pPlayer->DistanceToPoint(*(seg.pStartVertex));
   float distToV2 = m_pPlayer->DistanceToPoint(*(seg.pEndVertex));
@@ -363,32 +473,111 @@ void ViewRenderer::CalculateCeilingFloorHeight(Seg &seg, int &VXScreen, float &D
 
 void ViewRenderer::CalculateWallHeight(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle ){
   Angle angle90(90);
+  SegmentRenderData renderData{0};
   Angle segToNormalAngle = seg.SlopeAngle + angle90;
+
   Angle normalToV1Angle = segToNormalAngle.GetValue() - v1Angle.GetValue();
+
   Angle segToPlayerAngle = angle90 - normalToV1Angle;
 
-  float distToV1 = m_pPlayer->DistanceToPoint(*seg.pStartVertex);
-  float distToNormal = segToPlayerAngle.GetSinVal() * distToV1;
+  renderData.V1XScreen = v1X;
+  renderData.V2XScreen = v2X;
+  renderData.V1Angle   = v1Angle;
+  renderData.V2Angle   = v2Angle;
 
-  auto v1Scale = GetScaleFactor(v1X, segToNormalAngle, distToNormal);
-  auto v2Scale = GetScaleFactor(v2X, segToNormalAngle, distToNormal);
+  renderData.DistanceToV1 = m_pPlayer->DistanceToPoint(*seg.pStartVertex);
+  renderData.DistanceToNormal = segToPlayerAngle.GetSinVal() * renderData.DistanceToV1;
 
-  float steps = (v2Scale- v1Scale)/(v2X - v1X); 
-  float ceiling_ = seg.pRightSector->CeilingHeight - m_pPlayer->GetZ();
-  float floor_ = seg.pRightSector->FloorHeight - m_pPlayer->GetZ();
-  float ceilingStep =  -(ceiling_*steps);
-  float floorStep = -(floor_*steps);
+  renderData.V1ScaleFactor = GetScaleFactor(v1X, segToNormalAngle,renderData.DistanceToNormal);
+  renderData.V2ScaleFactor = GetScaleFactor(v2X, segToNormalAngle,renderData.DistanceToNormal);
 
-  float floorStart = Y_half_screen_size - (floor_*v1Scale);
-  float ceilingEnd = Y_half_screen_size - (ceiling_*v1Scale);
-  auto wallColor = GetWallColor(seg.pLinedef->pRightSidedef->MiddleTexture);
-  SetDrawColor(wallColor.r, wallColor.g, wallColor.b);
+  renderData.Steps = (renderData.V2ScaleFactor- renderData.V1ScaleFactor)/(v2X - v1X); 
+  renderData.RightSectorCeiling = seg.pRightSector->CeilingHeight - m_pPlayer->GetZ();
+  renderData.RightSectorFloor = seg.pRightSector->FloorHeight - m_pPlayer->GetZ();
 
-  for (auto iXCur = v1X; iXCur<= v2X; iXCur++){
-    SDL_RenderDrawLine(m_pRenderer, iXCur, ceilingEnd, iXCur, floorStart);
-    floorStart+=floorStep;
-    ceilingEnd+=ceilingStep;
+  renderData.CeilingStep =  -(renderData.RightSectorCeiling*renderData.Steps);
+  renderData.FloorStep = -(renderData.RightSectorFloor*renderData.Steps);
+
+  renderData.FloorStart = Y_half_screen_size - (renderData.RightSectorFloor * renderData.V1ScaleFactor);
+  renderData.CeilingEnd = Y_half_screen_size - (renderData.RightSectorCeiling*renderData.V1ScaleFactor);
+  
+  renderData.pSeg = &seg;
+  
+  if(seg.pLeftSector){
+    renderData.LeftSectorCeiling = seg.pLeftSector->CeilingHeight - m_pPlayer->GetZ();
+    renderData.LeftSectorFloor = seg.pLeftSector->FloorHeight - m_pPlayer->GetZ();
+
+    CeilingFloorUpdate(renderData);
+    if(renderData.LeftSectorCeiling < renderData.RightSectorCeiling){
+      renderData.bDrawUpperSection = true;
+      renderData.UpperHeightStep = -(renderData.LeftSectorCeiling*renderData.Steps);
+      renderData.iUpperHeight = round(Y_half_screen_size - (renderData.LeftSectorCeiling*renderData.V1ScaleFactor));
+    }
+    if(renderData.LeftSectorFloor > renderData.RightSectorFloor){
+      renderData.bDrawLowerSection = true;
+      renderData.LowerHeightStep = -(renderData.LeftSectorFloor * renderData.Steps);
+      renderData.iLowerHeight = round(Y_half_screen_size - (renderData.LeftSectorFloor * renderData.V1ScaleFactor));
+    }
   }
-
+  RenderSegment(renderData);
 }
 
+
+bool ViewRenderer::ValidateRange(SegmentRenderData &renderData, int &iXCur, int  &curCeilingEnd, int &curFloorStart){
+  if(curCeilingEnd < m_CeilingClipHeight[iXCur]+ 1)
+    curCeilingEnd=m_CeilingClipHeight[iXCur]+1;
+
+  if(curFloorStart >= m_FloorClipHeight[iXCur])
+    curFloorStart = m_FloorClipHeight[iXCur]-1;
+  
+  if(curCeilingEnd > curFloorStart){
+    renderData.CeilingEnd += renderData.CeilingStep;
+    renderData.FloorStart += renderData.FloorStep;
+    iXCur++;
+    return false;
+  }
+  return true;
+}
+
+
+void ViewRenderer::DrawMiddleSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd, int curFloorStart){
+  SDL_RenderDrawLine(m_pRenderer, iXcur, curCeilingEnd, iXcur, curFloorStart);
+  m_CeilingClipHeight[iXcur] = Y_screen_size;
+  m_FloorClipHeight[iXcur] = -1;
+}
+void ViewRenderer::DrawUpperSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd){
+  if(renderData.bDrawUpperSection){
+    int iUpperHeight = renderData.iUpperHeight;
+    renderData.iUpperHeight += renderData.UpperHeightStep;
+
+    if(iUpperHeight >= m_FloorClipHeight[iXcur])
+      iUpperHeight = m_FloorClipHeight[iXcur] -1;
+
+    if(iUpperHeight>= curCeilingEnd){
+      SDL_RenderDrawLine(m_pRenderer, iXcur, iUpperHeight, iXcur, curCeilingEnd);
+      m_CeilingClipHeight[iXcur] = iUpperHeight;
+    }else
+      m_CeilingClipHeight[iXcur] = curCeilingEnd-1;
+
+  }else if(renderData.UpdateCeiling){
+    m_CeilingClipHeight[iXcur] =curCeilingEnd-1;
+  }
+}
+void ViewRenderer::DrawLowerSection(SegmentRenderData &renderData, int iXcur, int curFloorStart){
+  if(renderData.bDrawLowerSection){
+    int iLowerHeigh = renderData.iLowerHeight;
+    renderData.iLowerHeight+= renderData.LowerHeightStep;
+
+    if(iLowerHeigh<m_CeilingClipHeight[iXcur])
+      iLowerHeigh = m_CeilingClipHeight[iXcur] +1;
+
+    if(iLowerHeigh <= curFloorStart){
+      SDL_RenderDrawLine(m_pRenderer, iXcur, iLowerHeigh, iXcur, curFloorStart);
+      m_FloorClipHeight[iXcur] = iLowerHeigh;
+    }else
+      m_FloorClipHeight[iXcur] = curFloorStart+1;
+
+  }else if(renderData.UpdateFloor){
+    m_FloorClipHeight[iXcur] = curFloorStart+1;
+  }
+}

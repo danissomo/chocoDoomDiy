@@ -5,6 +5,7 @@
 #include "Angle.h"
 #include <list>
 #include <map>
+#include<vector>
 
 
 class ViewRenderer {
@@ -87,6 +88,7 @@ class ViewRenderer {
 		    Seg *pSeg;
     };
   
+
   int AngleToScreen(Angle angle);
   int ScaleTranslate(int offset, int scale, int x_max, float param_cord);
   int RemapX(int x, int offset);
@@ -107,12 +109,24 @@ class ViewRenderer {
 
   std::list<SolidSegmentRange> m_SolidWallRanges;
   std::map<std::string, SDL_Color> m_WallColor;
+  std::vector<int> m_FloorClipHeight;
+  std::vector<int> m_CeilingClipHeight;
 
   SDL_Color GetWallColor(std::string textureName);
+  void SelectColor(Seg &seg, SDL_Color &color);
+  bool ValidateRange(SegmentRenderData &renderData, int &iXCur, int  &curCeilingEnd, int &curFloorStart);
 
   void StoreWallRange(Seg &seg, int V1XScreen, int V2XScreen, Angle v1Angle, Angle v2Angle);
   void ClipSolidWall(Seg &seg, int V1Xscreen, int V2Xscreen, Angle v1Angle, Angle v2Angle);
+  void ClipPassWall (Seg &seg, int V1XScreen, int V2XScreen, Angle v1Angle, Angle v2Angle);
+  void CeilingFloorUpdate(SegmentRenderData &renderData);
+  void RenderSegment(SegmentRenderData &renderData);
+
   void DrawSolidWall(SolidSegmentData &wall);
+  void DrawMiddleSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd, int curFloorStart);
+  void DrawUpperSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd);
+  void DrawLowerSection(SegmentRenderData &renderData, int iXcur, int curFloorStart);
+
   void CalculateWallHeightSimple(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle );
   void CalculateWallHeight(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle );
   void PartialSeg(Seg &seg, Angle& v1angle, Angle& v2angle, float &dist, bool isLeftSide);
