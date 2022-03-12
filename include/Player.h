@@ -11,6 +11,8 @@ class Player{
     void SetY(int);
     void SetZ(int);
     void SetAngle(int);
+
+    void Think(int ssFloorHeight);
     
     int GetID();
     int GetX();
@@ -39,6 +41,7 @@ class Player{
     int pl_FOV;
     int pl_rot_speed;
     int pl_mov_speed;
+    int plEyeLevel;
     Angle plAngle;
     Angle AngleOfVertexInFOV(Vertex &v);
 };

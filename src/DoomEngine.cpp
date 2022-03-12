@@ -1,17 +1,22 @@
 #include "DoomEngine.h"
 #include <iostream>
-DoomEngine::DoomEngine(SDL_Renderer *pRenderer)
-    : m_bIsOver(false), m_iRenderWidth(320), m_iRenderHeight(200) {
-  m_pRenderer =  pRenderer;
+DoomEngine::DoomEngine(){
+    m_bIsOver = false;
+    m_iRenderHeight = 200;
+    m_iRenderWidth = 320;
+    m_AppName = "DIYDOOM";
 }
 
 DoomEngine::~DoomEngine() { delete m_pMap; }
 
 bool DoomEngine::Init() {
-  m_pViewRenderer = new ViewRenderer(m_pRenderer);
+  m_pDispManager = new DisplayManager(m_iRenderHeight, m_iRenderWidth);
+  m_pDispManager->Init(GetName());
+
+
+  m_pViewRenderer = new ViewRenderer();
   m_pPlayer = new Player(THINGTYPE::ePLAYER);
   m_pMap = new Map("E1M1", m_pPlayer);
-
   m_pViewRenderer->Init(m_pMap, m_pPlayer);
 
   m_WADLoader.set_wad_path(GetWADFileName());
@@ -29,16 +34,23 @@ bool DoomEngine::Init() {
     std::cout << "Error: failed to load map "<< std::endl;
     return false;
   }
+
+  if(!m_WADLoader.load_palette(m_pDispManager)){
+    std::cout<< "Error: failed to load palette" << std::endl;
+    return false;
+  }
   m_pMap->Init();
   return true;
 }
 
 std::string DoomEngine::GetWADFileName() { return "DOOM.WAD"; }
 
-void DoomEngine::Render(SDL_Renderer *pRenderer) {
-  SDL_SetRenderDrawColor(pRenderer, 0x00, 0x00, 0x00, 0x00);
-  SDL_RenderClear(pRenderer);
-  m_pViewRenderer->Render();
+void DoomEngine::Render() {
+  // SDL_SetRenderDrawColor(pRenderer, 0x00, 0x00, 0x00, 0x00);
+  // SDL_RenderClear(pRenderer);
+  m_pDispManager->InitFrame();
+  m_pViewRenderer->Render(m_pDispManager->GetScreenBuffer(), m_iRenderWidth);
+  m_pDispManager->Render();
 }
 
 void DoomEngine::KeyPressed(SDL_Event &event) {
@@ -81,7 +93,9 @@ void DoomEngine::KeyReleased(SDL_Event &event) {}
 
 void DoomEngine::Quit() { m_bIsOver = true; }
 
-void DoomEngine::Update() {}
+void DoomEngine::Update() {
+  m_pPlayer->Think(m_pMap->GetSectorFloorHeight());
+}
 
 bool DoomEngine::IsOver() { return m_bIsOver; }
 
@@ -89,7 +103,7 @@ int DoomEngine::GetRenderWidth() { return m_iRenderWidth; }
 
 int DoomEngine::GetRenderHeight() { return m_iRenderHeight; }
 
-std::string DoomEngine::GetName() { return "DIYDoom"; }
+std::string DoomEngine::GetName() { return m_AppName; }
 
 int DoomEngine::GetTimePerFrame() { return 1000 / 60; }
 

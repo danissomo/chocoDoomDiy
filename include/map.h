@@ -47,6 +47,7 @@ class Map{
 		int GetXmin(){return xMin;}
 		int GetYmax(){return yMax;}
 		int GetYmin(){return yMin;}
+		int GetSectorFloorHeight();
 
 		
 		std::string to_desmos();//desmos visualisation https://www.desmos.com/calculator/nqyoe2gjgg

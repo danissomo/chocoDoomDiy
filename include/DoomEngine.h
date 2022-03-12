@@ -4,12 +4,13 @@
 #include "map.h"
 #include "wad_loader.h"
 #include "ViewRenderer.h"
+#include "DisplayManager.h"
 class DoomEngine {
  public:
-  DoomEngine(SDL_Renderer *pRenderer);
+  DoomEngine();
   ~DoomEngine();
 
-  virtual void Render(SDL_Renderer *);
+  virtual void Render();
   virtual void KeyPressed(SDL_Event &);
   virtual void KeyReleased(SDL_Event &);
   virtual void Quit();
@@ -30,11 +31,13 @@ class DoomEngine {
   int m_iRenderWidth;
   int m_iRenderHeight;
 
+  std::string m_AppName;
+
   bool m_bIsOver;
 
   wad_loader m_WADLoader;
   Map *m_pMap;
   Player *m_pPlayer;
   ViewRenderer *m_pViewRenderer;
-  SDL_Renderer *m_pRenderer;
+  DisplayManager *m_pDispManager;
 };

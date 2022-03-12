@@ -7,6 +7,7 @@ Player::Player( int ID){
     pl_FOV           = 90;
     pl_mov_speed    = 10;
     pl_rot_speed    = 4;
+    plEyeLevel = 41;
 }
 
 Player::~Player(){
@@ -118,4 +119,8 @@ float Player::DistanceToPoint(Vertex &v){
 
 int Player::GetFov(){
     return pl_FOV;
+}
+
+void Player::Think(int ssFloorHeight){
+    plZ = ssFloorHeight + plEyeLevel;
 }

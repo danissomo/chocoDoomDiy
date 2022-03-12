@@ -163,3 +163,13 @@ void wad_reader::read_sector_data(const uint8_t *pWAD_data, int offset, WADSecto
     sector.Type 				= read_2_bytes(pWAD_data, offset + 22);
     sector.Tag					= read_2_bytes(pWAD_data, offset + 24);
 }
+
+
+void wad_reader::read_palette(const uint8_t *pWAD_data, int offset, WADPalette &palette){
+    for(int i =0; i<256; i++){
+        palette.colors[i].r = pWAD_data[offset++];
+        palette.colors[i].g = pWAD_data[offset++];
+        palette.colors[i].b = pWAD_data[offset++];
+        palette.colors[i].a = 255;
+    }
+}

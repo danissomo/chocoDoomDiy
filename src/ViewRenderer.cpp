@@ -41,8 +41,7 @@ void ViewRenderer::SetCurrentState(ViewState *s) { viewState = s; }
 //constructors and destructors
 
 
-ViewRenderer::ViewRenderer(SDL_Renderer *pRenderer)
-    : m_pRenderer(pRenderer), autoScaleFactor(1) {}
+ViewRenderer::ViewRenderer(){}
 
 ViewRenderer::~ViewRenderer() {}
 
@@ -50,37 +49,6 @@ ViewRenderer::~ViewRenderer() {}
 //helping functions segment
 
 
-void ViewRenderer::SetDrawColor(int R, int G, int B) {
-  SDL_SetRenderDrawColor(m_pRenderer, R, G, B, SDL_ALPHA_OPAQUE);
-}
-
-void ViewRenderer::DrawRect(int X1, int Y1, int X2, int Y2) {
-  SDL_Rect Rect = {RemapX(X1, 0), RemapY(Y1, 0),
-                   RemapX(X2, 0) - RemapX(X1, 0) + 1,
-                   RemapY(Y2, 0) - RemapY(Y1, 0) + 1};
-  SDL_RenderDrawRect(m_pRenderer, &Rect);
-}
-
-void ViewRenderer::DrawLine(int X1, int Y1, int X2, int Y2) {
-  SDL_RenderDrawLine(m_pRenderer, RemapX(X1, 0), RemapY(Y1, 0), RemapX(X2, 0),
-                     RemapY(Y2, 0));
-}
-
-int ViewRenderer::RemapX(int x, int offset) {
-  return ScaleTranslate(
-      offset, autoScaleFactor, X_screen_size-1,
-      float(x - m_pMap->GetXmin()) / (m_pMap->GetXmax() - m_pMap->GetXmin()));
-}
-
-int ViewRenderer::RemapY(int y, int offset) {
-  return ScaleTranslate(
-      offset, autoScaleFactor, Y_screen_size-1,
-      float(-y + m_pMap->GetYmax()) / (m_pMap->GetYmax() - m_pMap->GetYmin()));
-}
-
-int ViewRenderer::ScaleTranslate(int offset, int scale, int x_max, float param_cord) {
-  return offset + x_max / 2 + (-x_max / 2 + x_max * param_cord) / scale;
-}
 
 float ViewRenderer::GetScaleFactor(int vxScreen, Angle segToNormalAngle, float distToNormal){
   const float MAX_SCALEFACTOR = 64.0f;
@@ -98,11 +66,11 @@ float ViewRenderer::GetScaleFactor(int vxScreen, Angle segToNormalAngle, float d
 }
 
 
-SDL_Color ViewRenderer::GetWallColor(std::string textureName){
+uint8_t ViewRenderer::GetWallColor(std::string textureName){
   if (m_WallColor.count(textureName))
     return m_WallColor[textureName];
   else{
-    SDL_Color color { u_char(rand() % 255), u_char(rand() % 255), u_char(rand() % 255) };
+    uint8_t color = uint8_t(rand()%255);
     m_WallColor[textureName]=color;
     return color;
   }
@@ -127,22 +95,14 @@ int ViewRenderer::AngleToScreen(Angle angle) {
   return iX;
 }
 
-void ViewRenderer::SelectColor(Seg &seg, SDL_Color &color){
-  if(seg.pLeftSector){
-    color = GetWallColor(seg.pLinedef->pRightSidedef->UpperTexture);
-    SetDrawColor(color.r, color.g, color.b);
-  }else{
-    color = GetWallColor(seg.pLinedef->pRightSidedef->MiddleTexture);
-    SetDrawColor(color.r, color.g, color.b);
-  }
-}
 
 
 //render segment
 
 
-void ViewRenderer::Init(Map *pMap, Player *pPlayer) {
-  SDL_RenderGetLogicalSize(m_pRenderer, &X_screen_size, &Y_screen_size);
+void ViewRenderer::Init(Map *pMap, Player *pPlayer, int Xsize, int Ysize) {
+  X_screen_size = Xsize;
+  Y_screen_size = Ysize;
   viewState = new c_State3DRender();
   m_pPlayer = pPlayer;
   m_pMap = pMap;
@@ -162,16 +122,9 @@ void ViewRenderer::Init(Map *pMap, Player *pPlayer) {
 //must be called before render every frame
 void ViewRenderer::InitFrame() {
 
-  // Read what is the resolution we are using
-  SDL_RenderGetLogicalSize(m_pRenderer, &X_screen_size, &Y_screen_size);
 
   Angle HalfFOV= m_pPlayer->GetFov()/2;
-  X_half_screen_size = X_screen_size/2;
-  Y_half_screen_size = Y_screen_size/2;
   m_DistPlayerToScreen = X_half_screen_size/HalfFOV.GetTanVal();
-  SetDrawColor(0, 0, 0);
-  SDL_RenderClear(m_pRenderer);
-
   m_SolidWallRanges.clear();
 
   SolidSegmentRange wallLeftSide;
@@ -190,19 +143,15 @@ void ViewRenderer::InitFrame() {
   std::fill(m_CeilingClipHeight.begin(), m_CeilingClipHeight.end(), -1);
 }
 
-void ViewRenderer::Render() { viewState->Render(this); }
+void ViewRenderer::Render(uint8_t *pScreenBuffer, int iBufferPitch) { 
+  m_pScreenBuffer = pScreenBuffer;
+  m_iBufferPitch = iBufferPitch;
+  InitFrame();
+  Render3DView();
+}
 
 void ViewRenderer::RenderAutoMap(){
-  auto lvlWalls = m_pMap->GetLvlWalls();
-  SetDrawColor(255, 255, 255);
-  for (int i =0; i < lvlWalls.size(); i++)
-    DrawLine(
-      lvlWalls[i].first.X_pos,
-      lvlWalls[i].first.Y_pos,
-      lvlWalls[i].second.X_pos,
-      lvlWalls[i].second.Y_pos);
-  SetDrawColor(255, 0, 0);
-  DrawLine(m_pPlayer->GetX(), m_pPlayer->GetY(), m_pPlayer->GetX() + 5, m_pPlayer->GetY() + 5);
+  
 }
 
 void ViewRenderer::Render3DView(){
@@ -219,9 +168,7 @@ void ViewRenderer::Render3DView(){
 }
 
 void ViewRenderer::RenderSegment(SegmentRenderData &renderData){
-  SDL_Color color;
   int iXcur = renderData.V1XScreen;
-  SelectColor(*(renderData.pSeg), color);
 
   while (iXcur <= renderData.V2XScreen){
     int curCeilingEnd = renderData.CeilingEnd;
@@ -300,13 +247,6 @@ void ViewRenderer::CeilingFloorUpdate(SegmentRenderData &renderData){
 }
 
 
-void ViewRenderer::DrawSolidWall(SolidSegmentData &wall){
-  SDL_Color color = GetWallColor(wall.seg.pLinedef->pRightSidedef->MiddleTexture);
-    // We know nothing about the wall hight yet, so draw from top of the screen to the bottom
-  SDL_Rect Rect = { wall.XStart, 0, wall.XEnd - wall.XStart + 1, Y_screen_size };
-  SetDrawColor(color.r, color.g, color.b);
-  SDL_RenderFillRect(m_pRenderer, &Rect);
-}
 
 void ViewRenderer::ClipSolidWall(Seg &seg, int V1XScreen, int V2XScreen, Angle v1Angle, Angle v2Angle){
   // Find clip window 
@@ -408,31 +348,6 @@ void ViewRenderer::ClipPassWall(Seg &seg, int V1XScreen, int V2XScreen, Angle v1
   StoreWallRange(seg, NextWall->XEnd + 1, CurrentWall.XEnd, v1Angle, v2Angle);
 }
 
-void ViewRenderer::CalculateWallHeightSimple(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle ){
-  float distToV1 = m_pPlayer->DistanceToPoint(*(seg.pStartVertex));
-  float distToV2 = m_pPlayer->DistanceToPoint(*(seg.pEndVertex));
-
-  if( v1X <= 0){
-    //std::cout << "partial left\n";
-    PartialSeg(seg, v1Angle, v2Angle, distToV1, true);
-  }
-  if(v2X >= X_screen_size-1){
-    //std::cout << "partial right\n";
-    PartialSeg(seg, v1Angle, v2Angle, distToV2, false);
-  }
-  float ceilingV1_screen=0, floorV1_screen=0;
-  float ceilingV2_screen=0, floorV2_screen=0;
-  CalculateCeilingFloorHeight(seg, v1X, distToV1, ceilingV1_screen, floorV1_screen);
-  CalculateCeilingFloorHeight(seg, v2X, distToV2, ceilingV2_screen, floorV2_screen);
-  auto color = GetWallColor(seg.pLinedef->pRightSidedef->MiddleTexture);
-  SetDrawColor(color.r, color.g, color.b);
-
-  SDL_RenderDrawLine(m_pRenderer, v1X, ceilingV1_screen, v1X, floorV1_screen);
-  SDL_RenderDrawLine(m_pRenderer, v2X, ceilingV2_screen, v2X, floorV2_screen);
-  SDL_RenderDrawLine(m_pRenderer, v1X, ceilingV1_screen, v2X, ceilingV2_screen);
-  SDL_RenderDrawLine(m_pRenderer, v1X, floorV1_screen, v2X, floorV2_screen);
-
-}
 
 void  ViewRenderer::PartialSeg(Seg &seg, Angle& v1angle, Angle& v2angle, float &dist, bool isLeftSide){
   float SideC = sqrt(pow(seg.pStartVertex->X_pos - seg.pEndVertex->X_pos, 2) + pow(seg.pStartVertex->Y_pos - seg.pEndVertex->Y_pos, 2));
@@ -541,7 +456,7 @@ bool ViewRenderer::ValidateRange(SegmentRenderData &renderData, int &iXCur, int 
 
 
 void ViewRenderer::DrawMiddleSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd, int curFloorStart){
-  SDL_RenderDrawLine(m_pRenderer, iXcur, curCeilingEnd, iXcur, curFloorStart);
+  DrawVerticalLine(iXcur,curCeilingEnd, curFloorStart, GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->MiddleTexture));
   m_CeilingClipHeight[iXcur] = Y_screen_size;
   m_FloorClipHeight[iXcur] = -1;
 }
@@ -554,7 +469,7 @@ void ViewRenderer::DrawUpperSection(SegmentRenderData &renderData, int iXcur, in
       iUpperHeight = m_FloorClipHeight[iXcur] -1;
 
     if(iUpperHeight>= curCeilingEnd){
-      SDL_RenderDrawLine(m_pRenderer, iXcur, iUpperHeight, iXcur, curCeilingEnd);
+      DrawVerticalLine(iXcur, curCeilingEnd, iUpperHeight, GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->UpperTexture));
       m_CeilingClipHeight[iXcur] = iUpperHeight;
     }else
       m_CeilingClipHeight[iXcur] = curCeilingEnd-1;
@@ -572,7 +487,9 @@ void ViewRenderer::DrawLowerSection(SegmentRenderData &renderData, int iXcur, in
       iLowerHeigh = m_CeilingClipHeight[iXcur] +1;
 
     if(iLowerHeigh <= curFloorStart){
-      SDL_RenderDrawLine(m_pRenderer, iXcur, iLowerHeigh, iXcur, curFloorStart);
+      //SDL_RenderDrawLine(m_pRenderer, iXcur, iLowerHeigh, iXcur, curFloorStart);
+      DrawVerticalLine(iXcur, iLowerHeigh, curFloorStart, GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->LowerTexture));
+
       m_FloorClipHeight[iXcur] = iLowerHeigh;
     }else
       m_FloorClipHeight[iXcur] = curFloorStart+1;
@@ -580,4 +497,9 @@ void ViewRenderer::DrawLowerSection(SegmentRenderData &renderData, int iXcur, in
   }else if(renderData.UpdateFloor){
     m_FloorClipHeight[iXcur] = curFloorStart+1;
   }
+}
+
+void ViewRenderer::DrawVerticalLine(int iX, int iStartY, int iEndY, uint8_t color){
+    for(int i = iStartY; i< iEndY; i++)
+        m_pScreenBuffer[m_iBufferPitch * i+ iX] = color;
 }

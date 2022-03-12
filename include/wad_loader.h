@@ -5,6 +5,7 @@
 
 #include "data_types.h"
 #include "wad_reader.h"
+#include "DisplayManager.h"
 
 class wad_loader {
  public:
@@ -12,6 +13,7 @@ class wad_loader {
   void set_wad_path(std::string);
   bool load_wad();
   bool load_map_data(Map *map);
+  bool load_palette(DisplayManager *pDispManager);
 
   ~wad_loader();
 
@@ -30,12 +32,14 @@ class wad_loader {
   template <typename T, void(wad_reader::*read_)(const uint8_t*, int, T&), void (Map::*ptr)(T&), EMAPLUMPSINDEX eLUMP>
   	bool read(Map *map);
   int find_map_index(Map *map);
+  int find_lump_index(std::string s);
 
   std::string sWAD_file_path;
   std::ifstream WAD_file;
   uint8_t *WAD_data;
   std::vector<dir> WAD_dirs;
   wad_reader reader;
+  DisplayManager *pDispManager;
    const static char* LUMPNAMES[];
 };
 

@@ -18,6 +18,7 @@ const char *wad_loader::LUMPNAMES[] = {
 wad_loader::wad_loader() : WAD_data(NULL) {}
 
 void wad_loader::set_wad_path(std::string file) { sWAD_file_path = file; }
+
 bool wad_loader::open_load() {
   WAD_file.open(sWAD_file_path, std::ifstream::binary);
   if (!WAD_file.is_open()) {
@@ -79,6 +80,13 @@ int wad_loader::find_map_index(Map *map) {
   return -1;
 }
 
+int wad_loader::find_lump_index(std::string s){
+  for (int i = 0; i < WAD_dirs.size(); i++) 
+    if (WAD_dirs[i].lump_name == s) 
+      return i;
+  return -1;
+}
+
 bool wad_loader::load_map_data(Map *map) {
   if (!read_map_vertex(map)) {
     std::cout << "Error: Failed to load vertex data MAP: " << map->get_name()
@@ -121,8 +129,23 @@ bool wad_loader::load_map_data(Map *map) {
     return false;
   }
 
+
   return true;
 }
+
+bool wad_loader::load_palette(DisplayManager *pDispManager){
+  std::cout << "Info: Loading palette" << std::endl;
+  int iPlayPal = find_lump_index("PLAYPAL");
+  if(strcmp(WAD_dirs[iPlayPal].lump_name, "PLAYPAL") != 0)  return false;
+  WADPalette palette;
+  for(int i =0; i< 14; i++){
+    reader.read_palette(WAD_data, WAD_dirs[iPlayPal].lump_offset + (i*3*256), palette);
+    pDispManager->AddColorPalette(palette);
+  }
+  return true;
+}
+
+
 template <typename T, void (wad_reader::*read_)(const uint8_t *, int, T &),
           void (Map::*push)(T &), EMAPLUMPSINDEX eLUMP>
 bool wad_loader::read(Map *map) {

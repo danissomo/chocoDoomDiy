@@ -18,6 +18,7 @@ class wad_reader{
 		void read_seg_data(const uint8_t *pWAD_data, int offset, WADSeg &seg);
 		void read_sector_data(const uint8_t *pWAD_data, int offset, WADSector &sector);
 		void read_linedef_data(const uint8_t *pWAD_data, int offset, WADlinedef &ldef);
+		void read_palette(const uint8_t *pWAD_data, int offset, WADPalette &palette);
 		
 
 	protected:

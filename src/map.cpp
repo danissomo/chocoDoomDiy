@@ -257,3 +257,16 @@ void Map::BuildSeg(){
     }
 
 }
+
+
+int Map::GetSectorFloorHeight(){
+  int iSsectorID = m_Nodes.size()-1;
+  while(!(iSsectorID & SUBSECTORIDENTIFIER)){
+    iSsectorID = IsPointOnLeftNodeSide(pPlayer->GetX(), pPlayer->GetY(), iSsectorID) ? 
+                 m_Nodes[iSsectorID].LeftChildID: m_Nodes[iSsectorID].RightChildID;
+  }
+  Subsector &ss = m_Subsectors[iSsectorID & (~SUBSECTORIDENTIFIER)];
+  Seg &seg = m_Segs[ss.FirstSegID];
+  return seg.pRightSector->FloorHeight;
+}
+

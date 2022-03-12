@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-
+#include <SDL2/SDL.h>
 #include "Angle.h"
 // Subsector Identifier is the 16th bit which
 // indicate if the node ID is a subsector.
@@ -165,3 +165,7 @@ struct Node {
   uint16_t LeftChildID;
 };
 
+
+struct WADPalette{
+  SDL_Color colors[256];
+};

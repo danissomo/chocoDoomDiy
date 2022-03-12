@@ -15,11 +15,6 @@ class Game{
     bool IsOver();
     bool Init();
 
-    protected:
-    int m_iWindowWidth;
-    int m_iWindowHeight;
-
-    SDL_Window *m_pWindow;
-    SDL_Renderer *m_pRenderer;
+    protected:    
     DoomEngine *m_pDoomEngine;
 };
