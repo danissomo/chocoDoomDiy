@@ -1,3 +1,4 @@
+#pragma once
 #include <fstream>
 #include <map>
 #include <string>
@@ -7,6 +8,7 @@
 #include "wad_reader.h"
 #include "DisplayManager.h"
 
+
 class wad_loader {
  public:
   wad_loader();
@@ -14,7 +16,7 @@ class wad_loader {
   bool load_wad();
   bool load_map_data(Map *map);
   bool load_palette(DisplayManager *pDispManager);
-
+   bool load_patch(std::string &patchName);
   ~wad_loader();
 
  protected:

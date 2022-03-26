@@ -8,6 +8,7 @@ Player::Player( int ID){
     pl_mov_speed    = 10;
     pl_rot_speed    = 4;
     plEyeLevel = 41;
+    plWeapon = new Pistol();
 }
 
 Player::~Player(){
@@ -123,4 +124,25 @@ int Player::GetFov(){
 
 void Player::Think(int ssFloorHeight){
     plZ = ssFloorHeight + plEyeLevel;
+}
+
+void Player::Render(uint8_t *pScreenBuffer, int iBufferPitch){
+    plWeapon->Render(pScreenBuffer, iBufferPitch);
+}
+
+
+void Player::Update(){
+    plWeapon->Update();
+}
+
+bool Player::Fire(){
+    return plWeapon->Fire();
+}
+
+void Player::FirePressed(){
+    plWeapon->FirePressed();
+}
+
+void Player::FireReleased(){
+    plWeapon->FireReleased();
 }

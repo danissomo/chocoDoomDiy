@@ -1,8 +1,7 @@
-#pragma once
 #include <SDL2/SDL.h>
 
 #include "data_types.h"
-#include "Angle.h"
+#include "map.h"
 #include <list>
 #include <map>
 #include<vector>
@@ -11,8 +10,8 @@
 class ViewRenderer {
   protected:
   
-  class Map *m_pMap;
-  class Player *m_pPlayer;
+  Map *m_pMap;
+  Player *m_pPlayer;
  public:
   class ViewState {
     public:
@@ -94,7 +93,7 @@ class ViewRenderer {
   int AngleToScreen(Angle angle);
   float GetScaleFactor(int vxScreen, Angle segToNormalAngle, float distToNormal);
 
-  int autoScaleFactor;
+  
   int X_screen_size;
   int Y_screen_size;
   int X_half_screen_size;

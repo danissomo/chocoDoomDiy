@@ -1,7 +1,7 @@
 #include "Angle.h"
 
 #include <cmath>
-#include "data_types.h"
+
 Angle::Angle() : m_Angle(0) {}
 
 Angle::Angle(float angle) {

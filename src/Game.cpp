@@ -2,17 +2,24 @@
 
 #include <iostream>
 #include <string>
+#include "DoomEngine.h"
 
 Game::Game() {}
 
+Game * Game::gameInst =nullptr;
+
+Game * Game::GetInstance(){
+  if(gameInst == nullptr)
+    gameInst =new Game();
+  return gameInst;
+}
 
 Game::~Game() {
-  delete m_pDoomEngine;
 }
 
 bool Game::Init() {
-  m_pDoomEngine = new DoomEngine();
-  if(!m_pDoomEngine || !m_pDoomEngine->Init()){
+  DoomEngine *pDoomEngine = DoomEngine::GetInstance();
+  if(!pDoomEngine || !pDoomEngine->Init()){
     std::cout << "Error: failed to init DoomEngine" << std::endl;
     return false;
   }
@@ -20,32 +27,33 @@ bool Game::Init() {
 }
 
 void Game::ProcessInput() {
+  DoomEngine *pDoomEngine = DoomEngine::GetInstance();
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
       switch (event.type) {
         case SDL_KEYDOWN:
-          m_pDoomEngine->KeyPressed(event);
+          pDoomEngine->KeyPressed(event);
           break;
 
         case SDL_KEYUP:
-          m_pDoomEngine->KeyReleased(event);
+          pDoomEngine->KeyReleased(event);
           break;
 
         case SDL_QUIT:
-          m_pDoomEngine->Quit();
+          pDoomEngine->Quit();
           break;
       }
   }
-  m_pDoomEngine->UpdateKeyStates(SDL_GetKeyboardState(NULL));
+  pDoomEngine->UpdateKeyStates(SDL_GetKeyboardState(NULL));
 }
 
 void Game::Render() {
   // Game objects to draw themselves
-  m_pDoomEngine->Render();
+  DoomEngine::GetInstance()->Render();
 }
 
-void Game::Update() { m_pDoomEngine->Update(); }
+void Game::Update() { DoomEngine::GetInstance()->Update(); }
 
-bool Game::IsOver() { return m_pDoomEngine->IsOver(); }
+bool Game::IsOver() { return DoomEngine::GetInstance()->IsOver(); }
 
-void Game::Delay() { SDL_Delay(m_pDoomEngine->GetTimePerFrame()); }
+void Game::Delay() { SDL_Delay(DoomEngine::GetInstance()->GetTimePerFrame()); }

@@ -19,7 +19,8 @@ class wad_reader{
 		void read_sector_data(const uint8_t *pWAD_data, int offset, WADSector &sector);
 		void read_linedef_data(const uint8_t *pWAD_data, int offset, WADlinedef &ldef);
 		void read_palette(const uint8_t *pWAD_data, int offset, WADPalette &palette);
-		
+		void read_patch_header(const uint8_t* pWAD_data, int offset, WADPatchHeader &patchHeader);
+		int read_patch_column(const uint8_t* pWAD_data, int offset, WADPatchColumn &patchColumn);
 
 	protected:
 	 	uint16_t read_2_bytes(const uint8_t* pWAD_data, int offset);

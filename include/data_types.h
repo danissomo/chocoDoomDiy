@@ -8,7 +8,7 @@
 // The node ID is stored as uint16
 // 0x8000 in binary 1000000000000000
 #define SUBSECTORIDENTIFIER 0x8000
-#define PI 3.14159265359
+
 enum EMAPLUMPSINDEX {
   eTHINGS = 1,
   eLINEDEFS,
@@ -168,4 +168,20 @@ struct Node {
 
 struct WADPalette{
   SDL_Color colors[256];
+};
+
+struct WADPatchHeader{
+  uint16_t width;
+  uint16_t height;
+  int16_t  topOffset;
+  int16_t  leftOffset;
+  uint32_t *columnOffset;
+};
+
+struct WADPatchColumn{
+  uint8_t topDelta;
+  uint8_t len;
+  uint8_t paddingPre;
+  uint8_t *pColumnData;
+  uint8_t paddingPost;
 };

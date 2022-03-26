@@ -1,5 +1,5 @@
 #include "wad_loader.h"
-
+#include "AssetsManager.h"
 #include <string.h>
 
 #include <iostream>
@@ -53,7 +53,9 @@ bool wad_loader::load_wad() {
   return true;
 }
 
-wad_loader::~wad_loader() { delete[] WAD_data; }
+wad_loader::~wad_loader() { 
+  delete[] WAD_data; 
+  }
 
 bool wad_loader::read_dirs() {
   wad_reader reader;
@@ -141,6 +143,30 @@ bool wad_loader::load_palette(DisplayManager *pDispManager){
   for(int i =0; i< 14; i++){
     reader.read_palette(WAD_data, WAD_dirs[iPlayPal].lump_offset + (i*3*256), palette);
     pDispManager->AddColorPalette(palette);
+  }
+  return true;
+}
+
+
+bool wad_loader::load_patch(std::string &patchName){
+  AssetsManager *assetsManager = AssetsManager::GetInstance();
+
+  int ipatch = find_lump_index(patchName);
+  if(strcmp(WAD_dirs[ipatch].lump_name, patchName.c_str())!=0)
+    return false;
+
+  WADPatchHeader patchHeader;
+  reader.read_patch_header(WAD_data, WAD_dirs[ipatch].lump_offset, patchHeader);
+
+  Patch *patch = assetsManager->AddPatch(patchName, patchHeader);
+
+  WADPatchColumn patchColumn; 
+  for (int i = 0; i< patchHeader.width; i++){
+    int offset = WAD_dirs[ipatch].lump_offset + patchHeader.columnOffset[i];
+    do{
+      offset = reader.read_patch_column(WAD_data, offset, patchColumn);
+      patch->AddPatchCol(patchColumn);
+    }while(patchColumn.topDelta != 0xFF);
   }
   return true;
 }

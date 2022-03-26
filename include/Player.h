@@ -1,7 +1,6 @@
-#pragma once
 #include <SDL2/SDL.h>
-#include "Angle.h"
 #include "data_types.h"
+#include "Weapon.h"
 class Player{
     public:
     Player(int ID);
@@ -32,6 +31,13 @@ class Player{
     void MoveRight();
 
     float DistanceToPoint(Vertex &v);
+
+    void Render(uint8_t *pScreenBuffer, int iBufferPitch);
+    void Update();
+    bool Fire();
+    void FirePressed();
+    void FireReleased();
+
    
     protected:
     int ID;
@@ -44,5 +50,7 @@ class Player{
     int plEyeLevel;
     Angle plAngle;
     Angle AngleOfVertexInFOV(Vertex &v);
+
+    Weapon *plWeapon;
 };
 

@@ -173,3 +173,33 @@ void wad_reader::read_palette(const uint8_t *pWAD_data, int offset, WADPalette &
         palette.colors[i].a = 255;
     }
 }
+
+
+void wad_reader::read_patch_header(const uint8_t* pWAD_data, int offset, WADPatchHeader &patchHeader){
+    patchHeader.width           = read_2_bytes(pWAD_data, offset);
+    patchHeader.height          = read_2_bytes(pWAD_data, offset + 2);
+    patchHeader.leftOffset      = read_2_bytes(pWAD_data, offset + 4);
+    patchHeader.topOffset       = read_2_bytes(pWAD_data, offset + 6);
+    patchHeader.columnOffset    = new uint32_t[patchHeader.width];
+
+    offset+=8;
+    for (int i = 0; i <patchHeader.width; i++){
+        patchHeader.columnOffset[i] = read_4_bytes(pWAD_data, offset);
+        offset+=4;
+    }
+}
+
+
+int wad_reader::read_patch_column(const uint8_t* pWAD_data, int offset, WADPatchColumn &patchColumn){
+    patchColumn.topDelta = pWAD_data[offset++];
+    int idata = 0;
+    if(patchColumn.topDelta != 0xFF){
+        patchColumn.len = pWAD_data[offset++];
+        patchColumn.paddingPre = pWAD_data[offset++];
+        patchColumn.pColumnData = new uint8_t[patchColumn.len];
+        for(int i = 0; i < patchColumn.len; i++)
+            patchColumn.pColumnData[i] = pWAD_data[offset++];
+        patchColumn.paddingPost = pWAD_data[offset++];
+    }
+    return offset;
+}

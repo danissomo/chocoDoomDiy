@@ -1,25 +1,31 @@
 #include "DoomEngine.h"
 #include <iostream>
+#include "AssetsManager.h"
 DoomEngine::DoomEngine(){
     m_bIsOver = false;
     m_iRenderHeight = 200;
     m_iRenderWidth = 320;
     m_AppName = "DIYDOOM";
 }
+DoomEngine * DoomEngine::instance = nullptr;
+DoomEngine *DoomEngine::GetInstance(){
+  if(instance ==nullptr)
+    instance = new DoomEngine();
+  return instance;
+}
 
 DoomEngine::~DoomEngine() { delete m_pMap; }
 
 bool DoomEngine::Init() {
+  AssetsManager::GetInstance()->Init(&m_WADLoader);
   m_pDispManager = new DisplayManager(m_iRenderHeight, m_iRenderWidth);
   m_pDispManager->Init(GetName());
 
-
-  m_pViewRenderer = new ViewRenderer();
-  m_pPlayer = new Player(THINGTYPE::ePLAYER);
-  m_pMap = new Map("E1M1", m_pPlayer);
-  m_pViewRenderer->Init(m_pMap, m_pPlayer);
-
   m_WADLoader.set_wad_path(GetWADFileName());
+
+  
+
+  
 
   std::cout << "Info: Loading WAD " << GetWADFileName() << std::endl;
 
@@ -27,6 +33,10 @@ bool DoomEngine::Init() {
     std::cout << "Error: failed WAD loading" << std::endl;
     return false;
   }
+  m_pViewRenderer = new ViewRenderer();
+  m_pPlayer = new Player(THINGTYPE::ePLAYER);
+  m_pMap = new Map("E1M1", m_pPlayer);
+  m_pViewRenderer->Init(m_pMap, m_pPlayer);
 
   std::cout << "Info: loading map data " << m_pMap->get_name() << std::endl;
 
@@ -40,17 +50,18 @@ bool DoomEngine::Init() {
     return false;
   }
   m_pMap->Init();
+  
   return true;
 }
 
 std::string DoomEngine::GetWADFileName() { return "DOOM.WAD"; }
 
 void DoomEngine::Render() {
-  // SDL_SetRenderDrawColor(pRenderer, 0x00, 0x00, 0x00, 0x00);
-  // SDL_RenderClear(pRenderer);
   m_pDispManager->InitFrame();
   m_pViewRenderer->Render(m_pDispManager->GetScreenBuffer(), m_iRenderWidth);
+  m_pPlayer->Render(m_pDispManager->GetScreenBuffer(), m_iRenderWidth);
   m_pDispManager->Render();
+  
 }
 
 void DoomEngine::KeyPressed(SDL_Event &event) {
@@ -84,17 +95,28 @@ void DoomEngine::KeyPressed(SDL_Event &event) {
       break;
     case SDLK_s:
       //m_pPlayer->MoveBackward();
+      break;
+    case SDLK_SPACE:
+      m_pPlayer->FirePressed();
+      break;
     default:
       break;
   }
 }
 
-void DoomEngine::KeyReleased(SDL_Event &event) {}
+void DoomEngine::KeyReleased(SDL_Event &event) {
+  switch (event.key.keysym.sym) {
+    case SDLK_SPACE:
+      m_pPlayer->FireReleased();
+    break;
+  }
+}
 
 void DoomEngine::Quit() { m_bIsOver = true; }
 
 void DoomEngine::Update() {
   m_pPlayer->Think(m_pMap->GetSectorFloorHeight());
+  m_pPlayer->Update();
 }
 
 bool DoomEngine::IsOver() { return m_bIsOver; }
@@ -125,5 +147,8 @@ void  DoomEngine::UpdateKeyStates(const Uint8 *keyStates){
   }
   if(keyStates[SDL_SCANCODE_D]){
     m_pPlayer->MoveRight();
+  }
+  if(keyStates[SDL_SCANCODE_SPACE]){
+    m_pPlayer->Fire();
   }
 }

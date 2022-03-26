@@ -212,7 +212,6 @@ void ViewRenderer::AddWallInFOV(Seg &seg, Angle V1Angle, Angle V2Angle, Angle v1
   if (seg.pLeftSector->CeilingHeight != seg.pRightSector->CeilingHeight ||
       seg.pLeftSector->FloorHeight != seg.pRightSector->FloorHeight) 
         ClipPassWall(seg, v1xscreen, v2xscreen, V1Angle, V2Angle);
-     //m_pMap->RenderAutoMap();
 }
 
 

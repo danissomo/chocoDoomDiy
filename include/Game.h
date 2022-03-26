@@ -1,10 +1,10 @@
 #include <SDL2/SDL.h>
 
-#include "DoomEngine.h"
+
 
 class Game{
     public:
-    Game();
+    static Game* GetInstance();
     virtual ~Game();
 
     void ProcessInput();
@@ -15,6 +15,7 @@ class Game{
     bool IsOver();
     bool Init();
 
-    protected:    
-    DoomEngine *m_pDoomEngine;
+    protected:
+    static Game* gameInst; 
+    Game();   
 };

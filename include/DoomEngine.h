@@ -5,9 +5,10 @@
 #include "wad_loader.h"
 #include "ViewRenderer.h"
 #include "DisplayManager.h"
+
 class DoomEngine {
  public:
-  DoomEngine();
+  static DoomEngine *GetInstance();
   ~DoomEngine();
 
   virtual void Render();
@@ -31,6 +32,9 @@ class DoomEngine {
   int m_iRenderWidth;
   int m_iRenderHeight;
 
+  DoomEngine();
+  static DoomEngine* instance;
+
   std::string m_AppName;
 
   bool m_bIsOver;
@@ -40,4 +44,5 @@ class DoomEngine {
   Player *m_pPlayer;
   ViewRenderer *m_pViewRenderer;
   DisplayManager *m_pDispManager;
+  
 };
