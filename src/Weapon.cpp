@@ -3,7 +3,6 @@
 #include <string>
 #include <time.h>
 Weapon::Weapon(){
-    //pPatch = AssetsManager::GetInstance()->GetPatch(sWeaponPatch);
     curFrame = 0;
     for(auto vecFrames = animationNames.begin(); vecFrames != animationNames.end(); vecFrames++){
         std::vector<Patch*> patchBuffer;
@@ -28,7 +27,6 @@ void Weapon::Update(){
                 isFiring = false;
                 curFrame = 0;
                 canFire = isAuto || !buttonState;
-            
             }
             lastUpdateTime = clock();
         }

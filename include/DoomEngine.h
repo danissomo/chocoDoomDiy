@@ -4,7 +4,7 @@
 #include "map.h"
 #include "wad_loader.h"
 #include "ViewRenderer.h"
-#include "DisplayManager.h"
+
 
 class DoomEngine {
  public:
@@ -43,6 +43,4 @@ class DoomEngine {
   Map *m_pMap;
   Player *m_pPlayer;
   ViewRenderer *m_pViewRenderer;
-  DisplayManager *m_pDispManager;
-  
 };

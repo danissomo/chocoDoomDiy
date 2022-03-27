@@ -6,7 +6,7 @@
 
 #include "data_types.h"
 #include "wad_reader.h"
-#include "DisplayManager.h"
+
 
 
 class wad_loader {
@@ -15,7 +15,7 @@ class wad_loader {
   void set_wad_path(std::string);
   bool load_wad();
   bool load_map_data(Map *map);
-  bool load_palette(DisplayManager *pDispManager);
+  bool load_palette();
    bool load_patch(std::string &patchName);
   ~wad_loader();
 
@@ -41,7 +41,6 @@ class wad_loader {
   uint8_t *WAD_data;
   std::vector<dir> WAD_dirs;
   wad_reader reader;
-  DisplayManager *pDispManager;
    const static char* LUMPNAMES[];
 };
 

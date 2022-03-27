@@ -1,6 +1,7 @@
 #include "DoomEngine.h"
 #include <iostream>
 #include "AssetsManager.h"
+#include "DisplayManager.h"
 DoomEngine::DoomEngine(){
     m_bIsOver = false;
     m_iRenderHeight = 200;
@@ -18,13 +19,9 @@ DoomEngine::~DoomEngine() { delete m_pMap; }
 
 bool DoomEngine::Init() {
   AssetsManager::GetInstance()->Init(&m_WADLoader);
-  m_pDispManager = new DisplayManager(m_iRenderHeight, m_iRenderWidth);
-  m_pDispManager->Init(GetName());
+  DisplayManager::GetInstance()->Init(GetName(), m_iRenderHeight, m_iRenderWidth);
 
   m_WADLoader.set_wad_path(GetWADFileName());
-
-  
-
   
 
   std::cout << "Info: Loading WAD " << GetWADFileName() << std::endl;
@@ -45,7 +42,7 @@ bool DoomEngine::Init() {
     return false;
   }
 
-  if(!m_WADLoader.load_palette(m_pDispManager)){
+  if(!m_WADLoader.load_palette()){
     std::cout<< "Error: failed to load palette" << std::endl;
     return false;
   }
@@ -57,10 +54,10 @@ bool DoomEngine::Init() {
 std::string DoomEngine::GetWADFileName() { return "DOOM.WAD"; }
 
 void DoomEngine::Render() {
-  m_pDispManager->InitFrame();
-  m_pViewRenderer->Render(m_pDispManager->GetScreenBuffer(), m_iRenderWidth);
-  m_pPlayer->Render(m_pDispManager->GetScreenBuffer(), m_iRenderWidth);
-  m_pDispManager->Render();
+  DisplayManager::GetInstance()->InitFrame();
+  m_pViewRenderer->Render(DisplayManager::GetInstance()->GetScreenBuffer(), m_iRenderWidth);
+  m_pPlayer->Render(DisplayManager::GetInstance()->GetScreenBuffer(), m_iRenderWidth);
+  DisplayManager::GetInstance()->Render();
   
 }
 
@@ -84,11 +81,7 @@ void DoomEngine::KeyPressed(SDL_Event &event) {
       Quit();
       break;
     case SDLK_TAB:
-      if( m_pViewRenderer->viewState->IsAutoMap()){
-          m_pViewRenderer->viewState->Set3DView(m_pViewRenderer);
-      }else{
-        m_pViewRenderer->viewState->SetAutoMap(m_pViewRenderer);
-      }
+      
       break;
     case SDLK_w:
       //m_pPlayer->MoveForward();

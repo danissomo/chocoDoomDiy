@@ -13,16 +13,6 @@ class ViewRenderer {
   Map *m_pMap;
   Player *m_pPlayer;
  public:
-  class ViewState {
-    public:
-      virtual void Render(ViewRenderer *v) = 0;
-
-      virtual void SetAutoMap(ViewRenderer *v){};
-      virtual bool IsAutoMap() {return false;}
-
-      virtual void Set3DView(ViewRenderer *v){};
-      virtual bool Is3DView() {return false;}
-  }*viewState;
   ViewRenderer();
   ~ViewRenderer();
    
@@ -39,7 +29,7 @@ class ViewRenderer {
   void RenderAutoMap();
   void Render3DView();
   void Render(uint8_t *pScreenBuffer, int iBufferPitch);
-  void SetCurrentState(ViewState *s);
+  
 
   
 

@@ -194,11 +194,11 @@ int wad_reader::read_patch_column(const uint8_t* pWAD_data, int offset, WADPatch
     patchColumn.topDelta = pWAD_data[offset++];
     int idata = 0;
     if(patchColumn.topDelta != 0xFF){
-        patchColumn.len = pWAD_data[offset++];
-        patchColumn.paddingPre = pWAD_data[offset++];
+        patchColumn.len         = pWAD_data[offset++];
+        patchColumn.paddingPre  = pWAD_data[offset++];
         patchColumn.pColumnData = new uint8_t[patchColumn.len];
-        for(int i = 0; i < patchColumn.len; i++)
-            patchColumn.pColumnData[i] = pWAD_data[offset++];
+        std::memcpy(patchColumn.pColumnData, pWAD_data+offset, patchColumn.len);
+        offset+=patchColumn.len;
         patchColumn.paddingPost = pWAD_data[offset++];
     }
     return offset;

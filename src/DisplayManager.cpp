@@ -1,10 +1,15 @@
 #include "DisplayManager.h"
 
 #include <iostream>
+DisplayManager* DisplayManager::instance = nullptr;
+DisplayManager* DisplayManager::GetInstance(){
+  if(instance == nullptr)
+    instance = new DisplayManager();
+  return instance;
+}
 
-DisplayManager::DisplayManager(int iWindowHeight, int iWindowWidth){
-    this->m_iWindowHeight = iWindowHeight;
-    this->m_iWindowWidth  = iWindowWidth;
+
+DisplayManager::DisplayManager(){
     m_pWindow   = nullptr;
     m_pRenderer = nullptr;
 }
@@ -15,7 +20,9 @@ DisplayManager::~DisplayManager(){
     SDL_Quit();
 }
 
-SDL_Renderer* DisplayManager::Init(const std::string& sWindowTitle) {
+SDL_Renderer* DisplayManager::Init(const std::string& sWindowTitle, int iWindowHeight, int iWindowWidth) {
+  this->m_iWindowHeight = iWindowHeight;
+  this->m_iWindowWidth  = iWindowWidth;
   int bpp;
   uint32_t rMask, gMask, bMask, aMask;
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
@@ -24,9 +31,11 @@ SDL_Renderer* DisplayManager::Init(const std::string& sWindowTitle) {
     return nullptr;
   }
 
-  m_pWindow = SDL_CreateWindow(sWindowTitle.c_str(), SDL_WINDOWPOS_UNDEFINED,
-                               SDL_WINDOWPOS_UNDEFINED, 1280,
-                               800, SDL_WINDOW_SHOWN);
+  m_pWindow = SDL_CreateWindow(sWindowTitle.c_str(), 
+                               SDL_WINDOWPOS_UNDEFINED,
+                               SDL_WINDOWPOS_UNDEFINED,
+                               1280, 800, 
+                               SDL_WINDOW_SHOWN);
   if (m_pWindow == nullptr) {
     std::cout << "SDL failed to create window! SDL_Error: " << SDL_GetError()
               << std::endl;
@@ -35,8 +44,7 @@ SDL_Renderer* DisplayManager::Init(const std::string& sWindowTitle) {
 
   m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, 0);
   if (m_pRenderer == nullptr) {
-    std::cout << "SDL failed to create renderer! SDL_Error: " << SDL_GetError()
-              << std::endl;
+    std::cout << "SDL failed to create renderer! SDL_Error: " << SDL_GetError() << std::endl;
     return nullptr;
   }
 
@@ -45,8 +53,7 @@ SDL_Renderer* DisplayManager::Init(const std::string& sWindowTitle) {
   m_pScreenBuffer =
       SDL_CreateRGBSurface(0, m_iWindowWidth, m_iWindowWidth, 8, 0, 0, 0, 0);
   if (m_pScreenBuffer == nullptr) {
-    std::cout << "SDL failed to create 8-bit surface! SDL_Error: "
-              << SDL_GetError() << std::endl;
+    std::cout << "SDL failed to create 8-bit surface! SDL_Error: " << SDL_GetError() << std::endl;
     return nullptr;
   }
   SDL_FillRect(m_pScreenBuffer, NULL, 0);
@@ -56,8 +63,7 @@ SDL_Renderer* DisplayManager::Init(const std::string& sWindowTitle) {
   m_pRGBBuffer =
       SDL_CreateRGBSurface(0, m_iWindowWidth, m_iWindowHeight, 32, rMask, gMask, bMask, aMask);
   if (m_pRGBBuffer == nullptr) {
-    std::cout << "Error: SDL failed to create 8-bit surface, SDL_Error: "
-              << SDL_GetError() << std::endl;
+    std::cout << "Error: SDL failed to create 8-bit surface, SDL_Error: " << SDL_GetError() << std::endl;
     return nullptr;
   }
 

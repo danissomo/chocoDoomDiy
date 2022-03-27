@@ -2,39 +2,6 @@
 #include "map.h"
 #include <bits/stdc++.h>
 
-//state segment
-
-
-
-class c_StateAutoMap : public ViewRenderer::ViewState{
- public:
- 
-  c_StateAutoMap() {}
-  ~c_StateAutoMap() {}
-  void Render(ViewRenderer *v) { v->RenderAutoMap(); }
-  void Set3DView(ViewRenderer *v);
-  bool IsAutoMap() {return true;}
-};
-
-class c_State3DRender : public  ViewRenderer::ViewState{
- public:
-  c_State3DRender() {}
-  ~c_State3DRender() {}
-  void Render(ViewRenderer *v) { v->Render3DView(); }
-  void SetAutoMap(ViewRenderer *v) {
-    v->SetCurrentState(new c_StateAutoMap());
-    delete this;
-  }
-  bool Is3DView() {return true;}
-};
-
-void c_StateAutoMap::Set3DView(ViewRenderer *v){
-  v->SetCurrentState(new c_State3DRender());
-    delete this;
-}
-
-void ViewRenderer::SetCurrentState(ViewState *s) { viewState = s; }
-
 
 
 
@@ -103,7 +70,7 @@ int ViewRenderer::AngleToScreen(Angle angle) {
 void ViewRenderer::Init(Map *pMap, Player *pPlayer, int Xsize, int Ysize) {
   X_screen_size = Xsize;
   Y_screen_size = Ysize;
-  viewState = new c_State3DRender();
+  
   m_pPlayer = pPlayer;
   m_pMap = pMap;
 

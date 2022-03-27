@@ -1,8 +1,10 @@
 #include "wad_loader.h"
 #include "AssetsManager.h"
-#include <string.h>
+#include "DisplayManager.h"
 
+#include <string.h>
 #include <iostream>
+
 const char *wad_loader::LUMPNAMES[] = {
     "THINGS",     // eTHINGS,
     "LINEDEFS",   // eLINEDEFS,
@@ -40,9 +42,6 @@ bool wad_loader::open_load() {
 
   WAD_file.close();
 
-#ifdef DEBUG_BUILD
-  std::cout << "Info: Loading complete" << std::endl;
-#endif
 
   return true;
 }
@@ -131,18 +130,20 @@ bool wad_loader::load_map_data(Map *map) {
     return false;
   }
 
-
   return true;
 }
 
-bool wad_loader::load_palette(DisplayManager *pDispManager){
+bool wad_loader::load_palette(){
   std::cout << "Info: Loading palette" << std::endl;
   int iPlayPal = find_lump_index("PLAYPAL");
+
+  if(iPlayPal == -1) return -1;
+
   if(strcmp(WAD_dirs[iPlayPal].lump_name, "PLAYPAL") != 0)  return false;
   WADPalette palette;
   for(int i =0; i< 14; i++){
     reader.read_palette(WAD_data, WAD_dirs[iPlayPal].lump_offset + (i*3*256), palette);
-    pDispManager->AddColorPalette(palette);
+    DisplayManager::GetInstance()->AddColorPalette(palette);
   }
   return true;
 }
@@ -152,6 +153,7 @@ bool wad_loader::load_patch(std::string &patchName){
   AssetsManager *assetsManager = AssetsManager::GetInstance();
 
   int ipatch = find_lump_index(patchName);
+  if(ipatch == -1) return false;
   if(strcmp(WAD_dirs[ipatch].lump_name, patchName.c_str())!=0)
     return false;
 
