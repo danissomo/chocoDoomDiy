@@ -37,6 +37,8 @@ class Player{
     bool Fire();
     void FirePressed();
     void FireReleased();
+    
+    Angle AngleOfVertexInFOV(Vertex &v);
 
    
     protected:
@@ -49,7 +51,6 @@ class Player{
     int pl_mov_speed;
     int plEyeLevel;
     Angle plAngle;
-    Angle AngleOfVertexInFOV(Vertex &v);
 
     Weapon *plWeapon;
 };

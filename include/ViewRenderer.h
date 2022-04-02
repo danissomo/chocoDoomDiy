@@ -2,9 +2,11 @@
 
 #include "data_types.h"
 #include "map.h"
+
 #include <list>
 #include <map>
 #include<vector>
+
 
 
 class ViewRenderer {
@@ -20,17 +22,13 @@ class ViewRenderer {
 
   void AddWallInFOV(Seg &seg, Angle V1Angle, Angle V2Angle, Angle v1AngleFpl, Angle V2AngleFpl);
   void InitFrame();
-  void SetDrawColor(int R, int G, int B);
-  void DrawRect(int X1, int Y1, int X2, int Y2);
-  void DrawLine(int X1, int Y1, int X2, int Y2);
+  
 
   void DrawVerticalLine(int iX, int iStartY, int iEndY, uint8_t color);
 
   void RenderAutoMap();
   void Render3DView();
   void Render(uint8_t *pScreenBuffer, int iBufferPitch);
-  
-
   
 
  protected:
@@ -44,43 +42,10 @@ class ViewRenderer {
         int XStart;
         int XEnd;
     };
-  struct SegmentRenderData{
-        int V1XScreen;
-        int V2XScreen;
-        Angle V1Angle;
-        Angle V2Angle;
-        float DistanceToV1;
-        float DistanceToNormal;
-        float V1ScaleFactor;
-        float V2ScaleFactor;
-        float Steps;
-
-        float RightSectorCeiling;
-        float RightSectorFloor;
-        float CeilingStep;
-        float CeilingEnd;
-        float FloorStep;
-        float FloorStart;
-
-        float LeftSectorCeiling;
-        float LeftSectorFloor;
-
-        bool bDrawUpperSection;
-        bool bDrawLowerSection;
-
-        float UpperHeightStep;
-        float iUpperHeight;
-        float LowerHeightStep;
-        float iLowerHeight;
-
-        bool UpdateFloor;
-        bool UpdateCeiling;
-
-		    Seg *pSeg;
-    };
-  
+    
 
   int AngleToScreen(Angle angle);
+  int AngleToScreen(Angle angle,  float dist);
   float GetScaleFactor(int vxScreen, Angle segToNormalAngle, float distToNormal);
 
   
@@ -95,7 +60,7 @@ class ViewRenderer {
 
   uint8_t *m_pScreenBuffer;
   
-  //SDL_Renderer *m_pRenderer;
+
 
   std::list<SolidSegmentRange> m_SolidWallRanges;
   std::map<std::string, uint8_t> m_WallColor;
@@ -117,7 +82,6 @@ class ViewRenderer {
 
   
   void CalculateWallHeight(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle );
-  void PartialSeg(Seg &seg, Angle& v1angle, Angle& v2angle, float &dist, bool isLeftSide);
   void CalculateCeilingFloorHeight(Seg &seg, int &VXScreen, float &DistanceToV, float &CeilingVOnScreen, float &FloorVOnScreen);
 };
 

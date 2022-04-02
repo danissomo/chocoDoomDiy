@@ -185,3 +185,67 @@ struct WADPatchColumn{
   uint8_t *pColumnData;
   uint8_t paddingPost;
 };
+
+struct WADPNames{
+    uint32_t PNameCount;
+    uint32_t PNameOffset;
+};
+
+struct WADTextureHeader{
+    uint32_t TexturesCount;
+    uint32_t TexturesOffset;
+    uint32_t *pTexturesDataOffset;
+};
+
+struct WADTexturePatch{
+    int16_t XOffset;
+    int16_t YOffset;
+    uint16_t PNameIndex;
+    uint16_t StepDir;  // Ignored
+    uint16_t ColorMap;  // Ignored
+};
+
+struct WADTextureData{
+    char TextureName[9];
+    uint32_t Flags;           // Ignored
+    uint16_t Width;
+    uint16_t Height;
+    uint32_t ColumnDirectory;  // Ignored
+    uint16_t PatchCount;
+    WADTexturePatch *pTexturePatch;
+};
+
+struct SegmentRenderData{
+        int V1XScreen;
+        int V2XScreen;
+        Angle V1Angle;
+        Angle V2Angle;
+        float DistanceToV1;
+        float DistanceToNormal;
+        float V1ScaleFactor;
+        float V2ScaleFactor;
+        float Steps;
+
+        float RightSectorCeiling;
+        float RightSectorFloor;
+        float CeilingStep;
+        float CeilingEnd;
+        float FloorStep;
+        float FloorStart;
+
+        float LeftSectorCeiling;
+        float LeftSectorFloor;
+
+        bool bDrawUpperSection;
+        bool bDrawLowerSection;
+
+        float UpperHeightStep;
+        float iUpperHeight;
+        float LowerHeightStep;
+        float iLowerHeight;
+
+        bool UpdateFloor;
+        bool UpdateCeiling;
+
+		    Seg *pSeg;
+    };

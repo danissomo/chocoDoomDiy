@@ -50,7 +50,7 @@ class Map{
 		int GetSectorFloorHeight();
 
 		
-		std::string to_desmos();//desmos visualisation https://www.desmos.com/calculator/nqyoe2gjgg
+		
 	protected:
 		std::string map_name;
 		std::vector<Vertex> m_verexes;

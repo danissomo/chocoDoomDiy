@@ -2,7 +2,7 @@
 #include "map.h"
 #include <bits/stdc++.h>
 
-
+#include "AssetsManager.h"
 
 
 //constructors and destructors
@@ -49,7 +49,10 @@ int ViewRenderer::AngleToScreen(Angle angle) {
   int iX = 0;
 
   // Left side
-  if (angle.GetValue() > 90) {
+  if(angle.GetValue() > 180)
+    angle = -angle + 360; 
+  
+   if (angle.GetValue() > 90) {
     angle -= 90;
     iX = m_DistPlayerToScreen - round(angle.GetTanVal() *X_half_screen_size);
   } else {
@@ -61,6 +64,11 @@ int ViewRenderer::AngleToScreen(Angle angle) {
 
   return iX;
 }
+
+int ViewRenderer::AngleToScreen(Angle angle,  float dist){
+  return angle.GetCosVal()*dist;
+}
+
 
 
 
@@ -315,24 +323,6 @@ void ViewRenderer::ClipPassWall(Seg &seg, int V1XScreen, int V2XScreen, Angle v1
 }
 
 
-void  ViewRenderer::PartialSeg(Seg &seg, Angle& v1angle, Angle& v2angle, float &dist, bool isLeftSide){
-  float SideC = sqrt(pow(seg.pStartVertex->X_pos - seg.pEndVertex->X_pos, 2) + pow(seg.pStartVertex->Y_pos - seg.pEndVertex->Y_pos, 2));
-     Angle V1toV2Span;
-     V1toV2Span = v1angle - v2angle;
-    float SINEAngleB = dist * V1toV2Span.GetSinVal() / SideC;
-    Angle AngleB(asinf(SINEAngleB) * 180.0 / PI);
-    Angle AngleA(180 - V1toV2Span.GetValue() - AngleB.GetValue());
-
-    Angle AngleVToFOV;
-    if (isLeftSide){
-        AngleVToFOV = v1angle - (m_pPlayer->GetAngle() + 45);
-    }else{
-        AngleVToFOV = (m_pPlayer->GetAngle() - 45) - v2angle;
-    }
-
-    Angle NewAngleB(180 - AngleVToFOV.GetValue() - AngleA.GetValue());
-    dist = (dist * AngleA.GetSinVal() )/ NewAngleB.GetSinVal();
-}
 
 void ViewRenderer::CalculateCeilingFloorHeight(Seg &seg, int &VXScreen, float &DistanceToV, float &CeilingVOnScreen, float &FloorVOnScreen){
   float ceiling = seg.pRightSector->CeilingHeight- m_pPlayer->GetZ();
@@ -422,7 +412,37 @@ bool ViewRenderer::ValidateRange(SegmentRenderData &renderData, int &iXCur, int 
 
 
 void ViewRenderer::DrawMiddleSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd, int curFloorStart){
-  DrawVerticalLine(iXcur,curCeilingEnd, curFloorStart, GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->MiddleTexture));
+  DrawVerticalLine(iXcur,curCeilingEnd, curFloorStart, 
+                   GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->MiddleTexture)- renderData.pSeg->pLinedef->pRightSidedef->pSector->Lightlevel);
+  auto angleV1woClip =m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pStartVertex))- m_pPlayer->GetAngle()+ 90;
+  auto angleV2woClip =m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pEndVertex))- m_pPlayer->GetAngle() + 90;
+  
+  auto assetInst = AssetsManager::GetInstance();
+  auto texture = assetInst->GetTexture(renderData.pSeg->pLinedef->pRightSidedef->MiddleTexture);
+  int textureYStart, textureYEnd;
+  int curColumn;
+  float v1Angle = angleV1woClip.GetValue() < 180 + 90 ? angleV1woClip.GetValue() : - 360 + angleV1woClip.GetValue();
+  float v2angle = angleV2woClip.GetValue() < 180 + 90 ? angleV2woClip.GetValue() : - 360 + angleV2woClip.GetValue();
+  int vx = renderData.pSeg->pLinedef->pStartVertex->X_pos - renderData.pSeg->pLinedef->pEndVertex->X_pos;
+  int vy = renderData.pSeg->pLinedef->pStartVertex->Y_pos - renderData.pSeg->pLinedef->pEndVertex->Y_pos;
+  float vertLen = sqrt(vx*vx + vy*vy);
+  if(v1Angle > v2angle)
+    curColumn = vertLen*(atan2f(m_DistPlayerToScreen, iXcur - X_half_screen_size  )*180/PI- v2angle )/float(v1Angle - v2angle);
+  else
+    curColumn = vertLen*(v1Angle - atan2f(m_DistPlayerToScreen, iXcur - X_half_screen_size )*180/PI)/float(v2angle - v1Angle);
+
+  textureYStart =  (texture->GetHeight()- 1)*(curCeilingEnd - renderData.CeilingEnd)/float(renderData.FloorStart - renderData.CeilingEnd);
+  textureYEnd   =  (texture->GetHeight()- 1)*(curFloorStart - renderData.CeilingEnd)/float(renderData.FloorStart - renderData.CeilingEnd);
+  curColumn = curColumn < 0? 0 : curColumn;
+  curColumn = curColumn % texture->GetWidth();
+  texture->RenderColumnWithScale(m_pScreenBuffer, 
+                                  m_iBufferPitch, 
+                                  curColumn, 
+                                  iXcur, 
+                                  curCeilingEnd, 
+                                  curFloorStart, 
+                                  textureYStart, 
+                                  textureYEnd);
   m_CeilingClipHeight[iXcur] = Y_screen_size;
   m_FloorClipHeight[iXcur] = -1;
 }

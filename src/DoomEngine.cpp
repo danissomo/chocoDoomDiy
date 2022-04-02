@@ -18,8 +18,7 @@ DoomEngine *DoomEngine::GetInstance(){
 DoomEngine::~DoomEngine() { delete m_pMap; }
 
 bool DoomEngine::Init() {
-  AssetsManager::GetInstance()->Init(&m_WADLoader);
-  DisplayManager::GetInstance()->Init(GetName(), m_iRenderHeight, m_iRenderWidth);
+  
 
   m_WADLoader.set_wad_path(GetWADFileName());
   
@@ -30,6 +29,8 @@ bool DoomEngine::Init() {
     std::cout << "Error: failed WAD loading" << std::endl;
     return false;
   }
+  AssetsManager::GetInstance()->Init(&m_WADLoader);
+  DisplayManager::GetInstance()->Init(GetName(), m_iRenderHeight, m_iRenderWidth);
   m_pViewRenderer = new ViewRenderer();
   m_pPlayer = new Player(THINGTYPE::ePLAYER);
   m_pMap = new Map("E1M1", m_pPlayer);

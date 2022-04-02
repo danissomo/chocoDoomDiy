@@ -69,37 +69,18 @@ Vertex &Map::get_vert(int i) {
   }
 }
 
-std::string Map::to_desmos() {
-  std::string s;
-  for (int i = 0; i < m_wad_linedefs.size(); i++) {
-    auto x1 = get_vert(m_wad_linedefs[i].start_vertex).X_pos,
-         x2 = get_vert(m_wad_linedefs[i].end_vertex).X_pos;
-    auto y1 = get_vert(m_wad_linedefs[i].start_vertex).Y_pos,
-         y2 = get_vert(m_wad_linedefs[i].end_vertex).Y_pos;
-    int size =
-        std::snprintf(nullptr, 0, "\\operatorname{polygon}((%d,%d),(%d,%d))\n",
-                      x1, y1, x2, y2) +
-        1;
-    auto buffer_string = std::make_unique<char[]>(size);
-    std::sprintf(buffer_string.get(),
-                 "\\operatorname{polygon}((%d,%d),(%d,%d))\n", x1, y1, x2, y2);
-    s += buffer_string.get();
-  }
-  return s;
-}
 
 
 
 std::vector<std::pair<Vertex, Vertex>> Map::GetLvlWalls() {
   std::vector<std::pair<Vertex, Vertex>> ret;
-  //m_pViewRenderer->SetDrawColor(255, 255, 255);
+  
   for (int i = 0; i < m_wad_linedefs.size(); i++) {
     auto p1 = m_verexes[m_wad_linedefs[i].start_vertex],
          p2 = m_verexes[m_wad_linedefs[i].end_vertex];
     Vertex p1_scaled, p2_scaled;
     
     ret.push_back({p1, p2});
-    //m_pViewRenderer->DrawLine(p1.X_pos, p1.Y_pos, p2.X_pos, p2.Y_pos);
   }
   return ret;
 }
@@ -202,6 +183,7 @@ void Map::BuildLinedef(){
             linedef.pRightSidedef = nullptr;
         }else{
             linedef.pRightSidedef = &m_Sidedefs[wadlinedef.right_sidedef];
+           
         }
 
         if (wadlinedef.left_sidedef == 0xFFFF){
@@ -252,7 +234,6 @@ void Map::BuildSeg(){
         }else{
             seg.pLeftSector = nullptr;
         }
-
         m_Segs.push_back(seg);
     }
 

@@ -37,8 +37,7 @@ SDL_Renderer* DisplayManager::Init(const std::string& sWindowTitle, int iWindowH
                                1280, 800, 
                                SDL_WINDOW_SHOWN);
   if (m_pWindow == nullptr) {
-    std::cout << "SDL failed to create window! SDL_Error: " << SDL_GetError()
-              << std::endl;
+    std::cout << "SDL failed to create window! SDL_Error: " << SDL_GetError() << std::endl;
     return nullptr;
   }
 
@@ -73,8 +72,7 @@ SDL_Renderer* DisplayManager::Init(const std::string& sWindowTitle, int iWindowH
                                  SDL_TEXTUREACCESS_STREAMING, m_iWindowWidth,
                                  m_iWindowHeight);
   if (m_pTexture == nullptr) {
-    std::cout << "Error: Failed to create texture, SDL_Error: "
-              << SDL_GetError() << std::endl;
+    std::cout << "Error: Failed to create texture, SDL_Error: " << SDL_GetError() << std::endl;
     return nullptr;
   }
 

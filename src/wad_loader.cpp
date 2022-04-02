@@ -82,9 +82,10 @@ int wad_loader::find_map_index(Map *map) {
 }
 
 int wad_loader::find_lump_index(std::string s){
-  for (int i = 0; i < WAD_dirs.size(); i++) 
-    if (WAD_dirs[i].lump_name == s) 
+  for (int i = 0; i < WAD_dirs.size(); i++){ 
+    if (strcmp(WAD_dirs[i].lump_name, s.c_str()) == 0) 
       return i;
+  }
   return -1;
 }
 
@@ -165,6 +166,7 @@ bool wad_loader::load_patch(std::string &patchName){
   WADPatchColumn patchColumn; 
   for (int i = 0; i< patchHeader.width; i++){
     int offset = WAD_dirs[ipatch].lump_offset + patchHeader.columnOffset[i];
+    patch->AppendColumnStartIndex();
     do{
       offset = reader.read_patch_column(WAD_data, offset, patchColumn);
       patch->AddPatchCol(patchColumn);
@@ -173,6 +175,49 @@ bool wad_loader::load_patch(std::string &patchName){
   return true;
 }
 
+bool wad_loader::load_texture(std::string textureName){
+  auto assetInst = AssetsManager::GetInstance();
+  int itexture = find_lump_index(textureName);
+
+  if (itexture < 0) return false;
+  if(strcmp(WAD_dirs[itexture].lump_name, textureName.c_str()) !=0) return false;
+
+  WADTextureHeader textureHeader;
+  reader.read_texture_header(WAD_data, WAD_dirs[itexture].lump_offset, textureHeader);
+
+  WADTextureData textureData;
+  for(int i = 0; i < textureHeader.TexturesCount; i++){
+    reader.read_texture_data(WAD_data, WAD_dirs[itexture].lump_offset + textureHeader.pTexturesDataOffset[i], textureData);
+    assetInst->AddTexture(textureData);
+    delete[] textureData.pTexturePatch;
+    textureData.pTexturePatch = nullptr;
+  }
+  
+  delete[] textureHeader.pTexturesDataOffset;
+  textureHeader.pTexturesDataOffset = nullptr;
+  return true;
+}
+
+
+bool wad_loader::load_pnames(){
+  auto assetInst = AssetsManager::GetInstance();
+  int iPName = find_lump_index("PNAMES");
+  if(iPName == -1) return false;
+   
+  if(strcmp(WAD_dirs[iPName].lump_name, "PNAMES") != 0) return false;
+
+  WADPNames pnames;
+  reader.read_pname(WAD_data, WAD_dirs[iPName].lump_offset, pnames);
+  char name[9];
+  name[8] = '\0';
+  for(int i = 0; i< pnames.PNameCount; i++){
+    reader.read_8_chars(WAD_data, pnames.PNameOffset, name);
+    std::string buff = name;
+    assetInst->AddPName(buff);
+    pnames.PNameOffset+=8;
+  }
+  return true;
+}
 
 template <typename T, void (wad_reader::*read_)(const uint8_t *, int, T &),
           void (Map::*push)(T &), EMAPLUMPSINDEX eLUMP>

@@ -11,7 +11,8 @@ set(CPPS
 "DisplayManager.cpp"
 "Patch.cpp"
 "AssetsManager.cpp"
-"Weapon.cpp")
+"Weapon.cpp"
+"Texture.cpp")
 
 add_executable(diyDoom main.cpp ${CPPS})
 target_link_libraries(diyDoom SDL2)

@@ -197,9 +197,77 @@ int wad_reader::read_patch_column(const uint8_t* pWAD_data, int offset, WADPatch
         patchColumn.len         = pWAD_data[offset++];
         patchColumn.paddingPre  = pWAD_data[offset++];
         patchColumn.pColumnData = new uint8_t[patchColumn.len];
-        std::memcpy(patchColumn.pColumnData, pWAD_data+offset, patchColumn.len);
-        offset+=patchColumn.len;
+        for(int i =0; i < patchColumn.len; i++, offset++)
+            patchColumn.pColumnData[i] = pWAD_data[offset];
+        
         patchColumn.paddingPost = pWAD_data[offset++];
     }
     return offset;
 }
+
+
+void wad_reader::read_pname(const uint8_t* pWAD_data, int offset, WADPNames &pNames){
+    pNames.PNameCount = read_4_bytes(pWAD_data, offset);
+    pNames.PNameOffset = offset+4;
+}
+
+
+void wad_reader::read_texture_header(const uint8_t* pWAD_data, int offset, WADTextureHeader &textureHeader){
+    textureHeader.TexturesCount         = read_4_bytes(pWAD_data, offset);
+    textureHeader.TexturesOffset        = read_4_bytes(pWAD_data, offset + 4);
+    textureHeader.pTexturesDataOffset   = new uint32_t[textureHeader.TexturesCount];
+    offset+=4;
+    for(int i = 0; i < textureHeader.TexturesCount; i++){
+        textureHeader.pTexturesDataOffset[i] = read_4_bytes(pWAD_data, offset);
+        offset += 4;
+    }
+}
+
+
+void wad_reader::read_texture_data(const uint8_t* pWAD_data, int offset, WADTextureData &textureData){
+    textureData.TextureName[0]  = pWAD_data[offset + 0];
+    textureData.TextureName[1]  = pWAD_data[offset + 1];
+    textureData.TextureName[2]  = pWAD_data[offset + 2];
+    textureData.TextureName[3]  = pWAD_data[offset + 3];
+    textureData.TextureName[4]  = pWAD_data[offset + 4];
+    textureData.TextureName[5]  = pWAD_data[offset + 5];
+    textureData.TextureName[6]  = pWAD_data[offset + 6];
+    textureData.TextureName[7]  = pWAD_data[offset + 7];
+    textureData.TextureName[8]  = '\0';
+
+    textureData.Flags           = read_4_bytes(pWAD_data, offset +  8);
+    textureData.Width           = read_2_bytes(pWAD_data, offset + 12);
+    textureData.Height          = read_2_bytes(pWAD_data, offset + 14);
+    textureData.ColumnDirectory = read_4_bytes(pWAD_data, offset + 16);
+    textureData.PatchCount      = read_2_bytes(pWAD_data, offset + 20);
+    textureData.pTexturePatch   = new WADTexturePatch[textureData.PatchCount];
+
+    offset += 22;
+    for(int i = 0; i < textureData.PatchCount; i++){
+        read_texture_patch(pWAD_data, offset, textureData.pTexturePatch[i]);
+        offset += 10;
+    }
+
+}
+
+
+void wad_reader::read_texture_patch(const uint8_t* pWAD_data, int offset, WADTexturePatch &texturePatch){
+    texturePatch.XOffset    = read_2_bytes(pWAD_data, offset + 0);
+    texturePatch.YOffset    = read_2_bytes(pWAD_data, offset + 2);
+    texturePatch.PNameIndex = read_2_bytes(pWAD_data, offset + 4);
+    texturePatch.StepDir    = read_2_bytes(pWAD_data, offset + 6);
+    texturePatch.ColorMap   = read_2_bytes(pWAD_data, offset + 8);
+}
+
+
+void wad_reader::read_8_chars(const uint8_t* pWAD_data, int offset, char *pName){
+    pName[0] = pWAD_data[offset++];
+    pName[1] = pWAD_data[offset++];
+    pName[2] = pWAD_data[offset++];
+    pName[3] = pWAD_data[offset++];
+    pName[4] = pWAD_data[offset++];
+    pName[5] = pWAD_data[offset++];
+    pName[6] = pWAD_data[offset++];
+    pName[7] = pWAD_data[offset++];
+}
+

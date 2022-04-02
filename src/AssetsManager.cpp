@@ -1,4 +1,5 @@
 #include "AssetsManager.h"
+#include <algorithm>
 
 AssetsManager* AssetsManager::instance =nullptr;
 
@@ -14,6 +15,7 @@ AssetsManager::~AssetsManager(){
 
 void AssetsManager::Init(wad_loader *pWADLoader){
     m_pWADLoader = pWADLoader;
+    LoadTextures();
 }
 
 
@@ -36,6 +38,36 @@ Patch* AssetsManager::AddPatch(const std::string &patchName, WADPatchHeader &pat
 void AssetsManager::LoadPatch(const std::string &patchName){
     std::string c = patchName;
     m_pWADLoader->load_patch(c);
+}
+
+Texture *AssetsManager::AddTexture(WADTextureData &textureData){
+    m_TextureCache[textureData.TextureName] = new Texture(textureData);
+    Texture *pTexture = m_TextureCache[textureData.TextureName];
+    return pTexture;
+}
+
+
+Texture *AssetsManager::GetTexture(const std::string &sTextureName){
+    if(!m_TextureCache.count(sTextureName)) return nullptr;
+    Texture *pTexture = m_TextureCache[sTextureName];
+    if(!pTexture->IsComposed()) pTexture->Compose();
+    return pTexture;
+}
+
+std::string AssetsManager::GetPName(int iPName){
+    auto r = m_PNameLookUp[iPName];
+    std::transform(r.begin(), r.end(), r.begin(), ::toupper);
+    return r;
+}
+
+void AssetsManager::AddPName(std::string &sPName){
+    m_PNameLookUp.push_back(sPName);
+}
+
+void AssetsManager::LoadTextures(){
+    m_pWADLoader->load_pnames();
+    m_pWADLoader->load_texture("TEXTURE1");
+    m_pWADLoader->load_texture("TEXTURE2");
 }
 
 AssetsManager *AssetsManager::GetInstance(){
