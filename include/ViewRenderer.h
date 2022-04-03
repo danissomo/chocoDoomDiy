@@ -2,7 +2,7 @@
 
 #include "data_types.h"
 #include "map.h"
-
+#include "Texture.h"
 #include <list>
 #include <map>
 #include<vector>
@@ -79,7 +79,7 @@ class ViewRenderer {
   void DrawMiddleSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd, int curFloorStart);
   void DrawUpperSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd);
   void DrawLowerSection(SegmentRenderData &renderData, int iXcur, int curFloorStart);
-
+  void DrawTexture(SegmentRenderData &renderData, Texture *pTexture, int iXCur, int YStart, int YEnd, float realYstart, float realYend);
   
   void CalculateWallHeight(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle );
   void CalculateCeilingFloorHeight(Seg &seg, int &VXScreen, float &DistanceToV, float &CeilingVOnScreen, float &FloorVOnScreen);

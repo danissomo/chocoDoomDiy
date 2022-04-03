@@ -412,37 +412,16 @@ bool ViewRenderer::ValidateRange(SegmentRenderData &renderData, int &iXCur, int 
 
 
 void ViewRenderer::DrawMiddleSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd, int curFloorStart){
-  DrawVerticalLine(iXcur,curCeilingEnd, curFloorStart, 
-                   GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->MiddleTexture)- renderData.pSeg->pLinedef->pRightSidedef->pSector->Lightlevel);
+  // DrawVerticalLine(iXcur,
+  //                  curCeilingEnd, 
+  //                  curFloorStart, 
+  //                  GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->MiddleTexture)- renderData.pSeg->pLinedef->pRightSidedef->pSector->Lightlevel);
   auto angleV1woClip =m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pStartVertex))- m_pPlayer->GetAngle()+ 90;
   auto angleV2woClip =m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pEndVertex))- m_pPlayer->GetAngle() + 90;
   
   auto assetInst = AssetsManager::GetInstance();
   auto texture = assetInst->GetTexture(renderData.pSeg->pLinedef->pRightSidedef->MiddleTexture);
-  int textureYStart, textureYEnd;
-  int curColumn;
-  float v1Angle = angleV1woClip.GetValue() < 180 + 90 ? angleV1woClip.GetValue() : - 360 + angleV1woClip.GetValue();
-  float v2angle = angleV2woClip.GetValue() < 180 + 90 ? angleV2woClip.GetValue() : - 360 + angleV2woClip.GetValue();
-  int vx = renderData.pSeg->pLinedef->pStartVertex->X_pos - renderData.pSeg->pLinedef->pEndVertex->X_pos;
-  int vy = renderData.pSeg->pLinedef->pStartVertex->Y_pos - renderData.pSeg->pLinedef->pEndVertex->Y_pos;
-  float vertLen = sqrt(vx*vx + vy*vy);
-  if(v1Angle > v2angle)
-    curColumn = vertLen*(atan2f(m_DistPlayerToScreen, iXcur - X_half_screen_size  )*180/PI- v2angle )/float(v1Angle - v2angle);
-  else
-    curColumn = vertLen*(v1Angle - atan2f(m_DistPlayerToScreen, iXcur - X_half_screen_size )*180/PI)/float(v2angle - v1Angle);
-
-  textureYStart =  (texture->GetHeight()- 1)*(curCeilingEnd - renderData.CeilingEnd)/float(renderData.FloorStart - renderData.CeilingEnd);
-  textureYEnd   =  (texture->GetHeight()- 1)*(curFloorStart - renderData.CeilingEnd)/float(renderData.FloorStart - renderData.CeilingEnd);
-  curColumn = curColumn < 0? 0 : curColumn;
-  curColumn = curColumn % texture->GetWidth();
-  texture->RenderColumnWithScale(m_pScreenBuffer, 
-                                  m_iBufferPitch, 
-                                  curColumn, 
-                                  iXcur, 
-                                  curCeilingEnd, 
-                                  curFloorStart, 
-                                  textureYStart, 
-                                  textureYEnd);
+  DrawTexture(renderData, texture, iXcur, curCeilingEnd, curFloorStart, renderData.CeilingEnd, renderData.FloorStart);
   m_CeilingClipHeight[iXcur] = Y_screen_size;
   m_FloorClipHeight[iXcur] = -1;
 }
@@ -455,7 +434,17 @@ void ViewRenderer::DrawUpperSection(SegmentRenderData &renderData, int iXcur, in
       iUpperHeight = m_FloorClipHeight[iXcur] -1;
 
     if(iUpperHeight>= curCeilingEnd){
-      DrawVerticalLine(iXcur, curCeilingEnd, iUpperHeight, GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->UpperTexture));
+      //DrawVerticalLine(iXcur, curCeilingEnd, iUpperHeight, GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->UpperTexture));
+      auto assetInst = AssetsManager::GetInstance();
+      auto texture = assetInst->GetTexture(renderData.pSeg->pLinedef->pRightSidedef->UpperTexture);
+      if(!isnan(renderData.UpperHeightStep))
+      DrawTexture(renderData, 
+                  texture, 
+                  iXcur, 
+                  curCeilingEnd, 
+                  iUpperHeight, 
+                  renderData.CeilingEnd, 
+                  Y_half_screen_size - (renderData.LeftSectorCeiling*renderData.V1ScaleFactor) + (iXcur - renderData.V1XScreen)*renderData.UpperHeightStep);
       m_CeilingClipHeight[iXcur] = iUpperHeight;
     }else
       m_CeilingClipHeight[iXcur] = curCeilingEnd-1;
@@ -470,12 +459,20 @@ void ViewRenderer::DrawLowerSection(SegmentRenderData &renderData, int iXcur, in
     renderData.iLowerHeight+= renderData.LowerHeightStep;
 
     if(iLowerHeigh<m_CeilingClipHeight[iXcur])
-      iLowerHeigh = m_CeilingClipHeight[iXcur] +1;
+      iLowerHeigh = m_CeilingClipHeight[iXcur] + 1;
 
     if(iLowerHeigh <= curFloorStart){
-      //SDL_RenderDrawLine(m_pRenderer, iXcur, iLowerHeigh, iXcur, curFloorStart);
-      DrawVerticalLine(iXcur, iLowerHeigh, curFloorStart, GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->LowerTexture));
-
+      //DrawVerticalLine(iXcur, iLowerHeigh, curFloorStart, GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->LowerTexture));
+      auto assetInst = AssetsManager::GetInstance();
+      auto texture = assetInst->GetTexture(renderData.pSeg->pLinedef->pRightSidedef->LowerTexture);
+      if (texture && !isnan(renderData.LowerHeightStep))
+        DrawTexture(renderData, 
+                    texture, 
+                    iXcur, 
+                    iLowerHeigh, 
+                    curFloorStart, 
+                    Y_half_screen_size - (renderData.LeftSectorFloor * renderData.V1ScaleFactor) + (iXcur - renderData.V1XScreen)*renderData.LowerHeightStep, 
+                    renderData.FloorStart);
       m_FloorClipHeight[iXcur] = iLowerHeigh;
     }else
       m_FloorClipHeight[iXcur] = curFloorStart+1;
@@ -483,6 +480,42 @@ void ViewRenderer::DrawLowerSection(SegmentRenderData &renderData, int iXcur, in
   }else if(renderData.UpdateFloor){
     m_FloorClipHeight[iXcur] = curFloorStart+1;
   }
+}
+
+
+
+void ViewRenderer::DrawTexture(SegmentRenderData &renderData, Texture *pTexture , int iXCur, int YStart, int YEnd, float realYstart, float realYend){
+  auto angleV1woClip =m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pStartVertex)) - m_pPlayer->GetAngle() + 90;
+  auto angleV2woClip =m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pEndVertex  )) - m_pPlayer->GetAngle() + 90;
+  
+  float v1Dist = m_pPlayer->DistanceToPoint((*(renderData.pSeg->pLinedef->pStartVertex)));
+  float v2Dist = m_pPlayer->DistanceToPoint((*(renderData.pSeg->pLinedef->pEndVertex)));
+
+  float curIXAngel = atan2f(m_DistPlayerToScreen, iXCur - X_half_screen_size)*180.0/PI;
+
+  float v1Angle = angleV1woClip.GetValue() < 180 + 90 ? angleV1woClip.GetValue() : - 360 + angleV1woClip.GetValue();
+  float v2angle = angleV2woClip.GetValue() < 180 + 90 ? angleV2woClip.GetValue() : - 360 + angleV2woClip.GetValue();
+  
+  int vx = renderData.pSeg->pLinedef->pStartVertex->X_pos - renderData.pSeg->pLinedef->pEndVertex->X_pos;
+  int vy = renderData.pSeg->pLinedef->pStartVertex->Y_pos - renderData.pSeg->pLinedef->pEndVertex->Y_pos;
+  float vertLen = sqrt(vx*vx + vy*vy);
+  float theta = acos((vertLen*vertLen + v1Dist*v1Dist - v2Dist*v2Dist)/(2.0*vertLen*v1Dist));
+
+  int curColumn = vertLen-  v1Dist*sin((v1Angle  - curIXAngel)*PI/180.0)/sin(PI - theta - (v1Angle - curIXAngel)*PI/180.0);
+  
+
+  int textureYStart =  (pTexture->GetHeight()- 1)*(YStart - realYstart)/float(realYend - realYstart);
+  int textureYEnd   =  (pTexture->GetHeight()- 1)*(YEnd - realYstart)/float(realYend - realYstart);
+  curColumn = curColumn < 0? 0 : curColumn;
+  curColumn = curColumn % pTexture->GetWidth();
+  pTexture->RenderColumnWithScale(m_pScreenBuffer, 
+                                  m_iBufferPitch, 
+                                  curColumn, 
+                                  iXCur, 
+                                  YStart, 
+                                  YEnd, 
+                                  textureYStart, 
+                                  textureYEnd);
 }
 
 void ViewRenderer::DrawVerticalLine(int iX, int iStartY, int iEndY, uint8_t color){
