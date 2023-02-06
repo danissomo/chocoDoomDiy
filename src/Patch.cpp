@@ -60,7 +60,7 @@ void Patch::RenderColumnWithScale(uint8_t* pScreenBuffer, int iBufferPitch, int 
     float iTotalHeight = 0;
     float iYIndex = tYStart;
     float step = float(tYEnd - tYStart)/float(YEnd - YStart);
-    if(iYOffset < 0) iYIndex = iYOffset * -1;
+    //if(iYOffset < 0) iYIndex = iYOffset * -1;
 
     while(patchData[iColumn].topDelta != 0xFF && YStart <= YEnd){
         while(int(iYIndex) < patchData[iColumn].len &&  YStart <= YEnd){

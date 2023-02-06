@@ -117,7 +117,7 @@ void Map::RenderSubsector(int subID, std::vector<ViewRendererDataWall> &dataWall
     Seg seg = m_Segs[subsector.FirstSegID + i];
     Angle a1, a2, v1AngleFomPlayer, v2AngleFromPlayer;
     if (pPlayer->IsLineInFOV(*(seg.pStartVertex), *(seg.pEndVertex), a1, a2, v1AngleFomPlayer, v2AngleFromPlayer)) {
-      dataWallsInFOV.push_back({seg, a1, a2, v1AngleFomPlayer, v2AngleFromPlayer});
+      dataWallsInFOV.push_back({seg, a1, a2, v1AngleFomPlayer, v2AngleFromPlayer, subID});
     }
   }
 }
@@ -251,3 +251,12 @@ int Map::GetSectorFloorHeight(){
   return seg.pRightSector->FloorHeight;
 }
 
+
+std::vector <Seg> Map::GetSegBySubID(int subID){
+  std::vector<Seg> result;
+  for (int i = 0; i < m_Subsectors[subID].SegCount; i++) {
+    Seg seg = m_Segs[m_Subsectors[subID].FirstSegID + i];
+    result.push_back(seg);
+  }
+  return result;
+}

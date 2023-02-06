@@ -96,19 +96,18 @@ void ViewRenderer::Init(Map *pMap, Player *pPlayer, int Xsize, int Ysize) {
 
 //must be called before render every frame
 void ViewRenderer::InitFrame() {
-
+  m_SolidWallRanges.clear();
+  m_subIDInView.clear();
 
   Angle HalfFOV= m_pPlayer->GetFov()/2;
   m_DistPlayerToScreen = X_half_screen_size/HalfFOV.GetTanVal();
-  m_SolidWallRanges.clear();
-
+  
   SolidSegmentRange wallLeftSide;
   SolidSegmentRange wallRightSide;
 
   wallLeftSide.XStart = INT_MIN;
   wallLeftSide.XEnd   = -1;
   m_SolidWallRanges.push_back(wallLeftSide);
-
 
   wallRightSide.XStart = X_screen_size;
   wallRightSide.XEnd   = INT_MAX;
@@ -134,12 +133,14 @@ void ViewRenderer::Render3DView(){
   std::vector<ViewRendererDataWall> renderData;
   renderData.clear();
   m_pMap->RenderBSPNodes(renderData);
-  for(int i= 0; i< renderData.size(); i++)
+  for(int i= 0; i< renderData.size(); i++){
     AddWallInFOV(renderData[i].seg, 
                  renderData[i].V1Angle, 
                  renderData[i].V2Angle,
                  renderData[i].v1AngleFpl,
                  renderData[i].V2AngleFpl);
+    m_subIDInView.insert(renderData[i].subID);
+  }
 }
 
 void ViewRenderer::RenderSegment(SegmentRenderData &renderData){
@@ -157,6 +158,7 @@ void ViewRenderer::RenderSegment(SegmentRenderData &renderData){
     }else{
       DrawMiddleSection(renderData, iXcur, curCeilingEnd, curFloorStart);
     }
+
     renderData.CeilingEnd += renderData.CeilingStep;
     renderData.FloorStart+=renderData.FloorStep;
     iXcur++;
@@ -412,10 +414,6 @@ bool ViewRenderer::ValidateRange(SegmentRenderData &renderData, int &iXCur, int 
 
 
 void ViewRenderer::DrawMiddleSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd, int curFloorStart){
-  // DrawVerticalLine(iXcur,
-  //                  curCeilingEnd, 
-  //                  curFloorStart, 
-  //                  GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->MiddleTexture)- renderData.pSeg->pLinedef->pRightSidedef->pSector->Lightlevel);
   auto angleV1woClip =m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pStartVertex))- m_pPlayer->GetAngle()+ 90;
   auto angleV2woClip =m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pEndVertex))- m_pPlayer->GetAngle() + 90;
   
@@ -462,7 +460,6 @@ void ViewRenderer::DrawLowerSection(SegmentRenderData &renderData, int iXcur, in
       iLowerHeigh = m_CeilingClipHeight[iXcur] + 1;
 
     if(iLowerHeigh <= curFloorStart){
-      //DrawVerticalLine(iXcur, iLowerHeigh, curFloorStart, GetWallColor(renderData.pSeg->pLinedef->pRightSidedef->LowerTexture));
       auto assetInst = AssetsManager::GetInstance();
       auto texture = assetInst->GetTexture(renderData.pSeg->pLinedef->pRightSidedef->LowerTexture);
       if (texture && !isnan(renderData.LowerHeightStep))
@@ -471,7 +468,7 @@ void ViewRenderer::DrawLowerSection(SegmentRenderData &renderData, int iXcur, in
                     iXcur, 
                     iLowerHeigh, 
                     curFloorStart, 
-                    Y_half_screen_size - (renderData.LeftSectorFloor * renderData.V1ScaleFactor) + (iXcur - renderData.V1XScreen)*renderData.LowerHeightStep, 
+                    Y_half_screen_size - 1 - (renderData.LeftSectorFloor * renderData.V1ScaleFactor) + (iXcur - renderData.V1XScreen)*renderData.LowerHeightStep, 
                     renderData.FloorStart);
       m_FloorClipHeight[iXcur] = iLowerHeigh;
     }else
@@ -485,29 +482,33 @@ void ViewRenderer::DrawLowerSection(SegmentRenderData &renderData, int iXcur, in
 
 
 void ViewRenderer::DrawTexture(SegmentRenderData &renderData, Texture *pTexture , int iXCur, int YStart, int YEnd, float realYstart, float realYend){
-  auto angleV1woClip =m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pStartVertex)) - m_pPlayer->GetAngle() + 90;
-  auto angleV2woClip =m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pEndVertex  )) - m_pPlayer->GetAngle() + 90;
+  auto angleV1woClip = m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pStartVertex)) - m_pPlayer->GetAngle() + 90;
+  auto angleV2woClip = m_pPlayer->AngleOfVertexInFOV(*(renderData.pSeg->pLinedef->pEndVertex  )) - m_pPlayer->GetAngle() + 90;
   
-  float v1Dist = m_pPlayer->DistanceToPoint((*(renderData.pSeg->pLinedef->pStartVertex)));
-  float v2Dist = m_pPlayer->DistanceToPoint((*(renderData.pSeg->pLinedef->pEndVertex)));
+  float v1Dist       = m_pPlayer->DistanceToPoint((*(renderData.pSeg->pLinedef->pStartVertex)));
+  float v2Dist       = m_pPlayer->DistanceToPoint((*(renderData.pSeg->pLinedef->pEndVertex)));
 
-  float curIXAngel = atan2f(m_DistPlayerToScreen, iXCur - X_half_screen_size)*180.0/PI;
+  float curIXAngel   = atan2f(m_DistPlayerToScreen, iXCur - X_half_screen_size)*180.0/PI;
 
-  float v1Angle = angleV1woClip.GetValue() < 180 + 90 ? angleV1woClip.GetValue() : - 360 + angleV1woClip.GetValue();
-  float v2angle = angleV2woClip.GetValue() < 180 + 90 ? angleV2woClip.GetValue() : - 360 + angleV2woClip.GetValue();
+  float v1Angle      = angleV1woClip.GetValue() < 180 + 90 ? angleV1woClip.GetValue() : - 360 + angleV1woClip.GetValue();
+  float v2angle      = angleV2woClip.GetValue() < 180 + 90 ? angleV2woClip.GetValue() : - 360 + angleV2woClip.GetValue();
+  if(v2angle > v1Angle){
+    std::swap(v1Angle, v2angle);
+    std::swap(v1Dist, v2Dist);
+  }
+  int vx              = renderData.pSeg->pLinedef->pStartVertex->X_pos - renderData.pSeg->pLinedef->pEndVertex->X_pos;
+  int vy              = renderData.pSeg->pLinedef->pStartVertex->Y_pos - renderData.pSeg->pLinedef->pEndVertex->Y_pos;
+  float vertLen       = sqrt(vx*vx + vy*vy);
+  float theta         = acos((vertLen*vertLen + v1Dist*v1Dist - v2Dist*v2Dist)/(2.0*vertLen*v1Dist));
+
+  int curColumn       = vertLen-  v1Dist*sin((v1Angle  - curIXAngel)*PI/180.0)/sin(PI - theta - (v1Angle - curIXAngel)*PI/180.0);
   
-  int vx = renderData.pSeg->pLinedef->pStartVertex->X_pos - renderData.pSeg->pLinedef->pEndVertex->X_pos;
-  int vy = renderData.pSeg->pLinedef->pStartVertex->Y_pos - renderData.pSeg->pLinedef->pEndVertex->Y_pos;
-  float vertLen = sqrt(vx*vx + vy*vy);
-  float theta = acos((vertLen*vertLen + v1Dist*v1Dist - v2Dist*v2Dist)/(2.0*vertLen*v1Dist));
 
-  int curColumn = vertLen-  v1Dist*sin((v1Angle  - curIXAngel)*PI/180.0)/sin(PI - theta - (v1Angle - curIXAngel)*PI/180.0);
-  
-
-  int textureYStart =  (pTexture->GetHeight()- 1)*(YStart - realYstart)/float(realYend - realYstart);
-  int textureYEnd   =  (pTexture->GetHeight()- 1)*(YEnd - realYstart)/float(realYend - realYstart);
-  curColumn = curColumn < 0? 0 : curColumn;
-  curColumn = curColumn % pTexture->GetWidth();
+  int textureYStart   = (pTexture->GetHeight()- 1)*(YStart - int(realYstart))/float(realYend - realYstart);
+  int textureYEnd     = (pTexture->GetHeight()- 1)*(YEnd - int(realYstart))/float(realYend - realYstart);
+  curColumn           = curColumn < 0? 0 : curColumn;
+  curColumn           = curColumn % pTexture->GetWidth();
+  if(textureYStart < 0) return;
   pTexture->RenderColumnWithScale(m_pScreenBuffer, 
                                   m_iBufferPitch, 
                                   curColumn, 
@@ -522,3 +523,4 @@ void ViewRenderer::DrawVerticalLine(int iX, int iStartY, int iEndY, uint8_t colo
     for(int i = iStartY; i< iEndY; i++)
         m_pScreenBuffer[m_iBufferPitch * i+ iX] = color;
 }
+

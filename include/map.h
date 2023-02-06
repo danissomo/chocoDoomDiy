@@ -14,6 +14,7 @@ struct ViewRendererDataWall{
 	Angle V2Angle;
 	Angle v1AngleFpl;
 	Angle V2AngleFpl;
+	int subID;
 };
 
 class Map{
@@ -48,6 +49,7 @@ class Map{
 		int GetYmax(){return yMax;}
 		int GetYmin(){return yMin;}
 		int GetSectorFloorHeight();
+		std::vector<Seg> GetSegBySubID(int subID);
 
 		
 		

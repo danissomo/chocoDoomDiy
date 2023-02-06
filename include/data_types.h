@@ -249,3 +249,14 @@ struct SegmentRenderData{
 
 		    Seg *pSeg;
     };
+
+
+struct visplane{
+  int height;
+  char textureName[9];
+  int lightLevel;
+  int minx;
+  int maxx;
+  uint8_t top[320];
+  uint8_t bottom[320];
+}; 

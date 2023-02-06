@@ -5,6 +5,7 @@
 #include "Texture.h"
 #include <list>
 #include <map>
+#include <set>
 #include<vector>
 
 
@@ -59,8 +60,8 @@ class ViewRenderer {
   std::map<int, Angle> m_ScreenXToAngle;
 
   uint8_t *m_pScreenBuffer;
-  
-
+ 
+  std::set<int> m_subIDInView;
 
   std::list<SolidSegmentRange> m_SolidWallRanges;
   std::map<std::string, uint8_t> m_WallColor;
@@ -71,16 +72,16 @@ class ViewRenderer {
   bool ValidateRange(SegmentRenderData &renderData, int &iXCur, int  &curCeilingEnd, int &curFloorStart);
 
   void StoreWallRange(Seg &seg, int V1XScreen, int V2XScreen, Angle v1Angle, Angle v2Angle);
-  void ClipSolidWall(Seg &seg, int V1Xscreen, int V2Xscreen, Angle v1Angle, Angle v2Angle);
-  void ClipPassWall (Seg &seg, int V1XScreen, int V2XScreen, Angle v1Angle, Angle v2Angle);
+  void ClipSolidWall (Seg &seg, int V1Xscreen, int V2Xscreen, Angle v1Angle, Angle v2Angle);
+  void ClipPassWall  (Seg &seg, int V1XScreen, int V2XScreen, Angle v1Angle, Angle v2Angle);
   void CeilingFloorUpdate(SegmentRenderData &renderData);
   void RenderSegment(SegmentRenderData &renderData);
 
   void DrawMiddleSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd, int curFloorStart);
-  void DrawUpperSection(SegmentRenderData &renderData, int iXcur, int curCeilingEnd);
-  void DrawLowerSection(SegmentRenderData &renderData, int iXcur, int curFloorStart);
+  void DrawUpperSection (SegmentRenderData &renderData, int iXcur, int curCeilingEnd);
+  void DrawLowerSection (SegmentRenderData &renderData, int iXcur, int curFloorStart);
+  void DrawFloor(SegmentRenderData &renderData);
   void DrawTexture(SegmentRenderData &renderData, Texture *pTexture, int iXCur, int YStart, int YEnd, float realYstart, float realYend);
-  
   void CalculateWallHeight(Seg &seg, int v1X, int v2X, Angle v1Angle, Angle v2Angle );
   void CalculateCeilingFloorHeight(Seg &seg, int &VXScreen, float &DistanceToV, float &CeilingVOnScreen, float &FloorVOnScreen);
 };

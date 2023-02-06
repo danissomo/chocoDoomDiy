@@ -17,6 +17,7 @@ class Texture{
     void Render(uint8_t *pScreenbuffer, int iBufferPitch, std::pair<int, int> XYScreenLoaction);
     void RenderColumn(uint8_t *pScreenbuffer, int iBufferPitch, std::pair<int, int>  XYScreenLoaction, int iCurrentColumnIndex);
     void RenderColumnWithScale(uint8_t* pScreenbuffer, int iBufferPitch, int iColumn, int XCur, int YStart, int YEnd, int tYStart, int tYEnd);
+    void RenderLineWithScale(uint8_t* pScreenbuffer, int iBufferPitch, int iRow, int X1, int Y1, int X2, int Y2, int tXStart, int tXEnd);
 
     int GetWidth();
     int GetHeight();
